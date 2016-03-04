@@ -57,22 +57,24 @@ def case_quote(text_segment):
 
 
 def case_digit(text_segment):
-    val = ''
+    suffix = ''
     valid_float = False
     for character in text_segment:
         character_value = symbol_map.get(character, None)
         if character_value == DIGIT:
-            val += character
+            suffix += character
             valid_float = True
         elif character_value == DOT:
             if valid_float:
-                if val.__contains__('.'):
+                if suffix.__contains__('.'):
                     # Does scanner throw error .5?
                     raise PascalError('Not a valid float.')
                 else:
-                    val += character
+                    suffix += character
             else:
                 raise PascalError('')
+        else:
+            return suffix
 
 
 def get_token(pascal_file):
@@ -95,7 +97,9 @@ def get_token(pascal_file):
             else:
                 print token_name(word)
         elif symbol == DIGIT:
-            index += 1
+            word = case_digit(pascal_file.contents[index:])
+            index += len(word)
+            print TOKEN_INT_LIT, word.replace('\'', '')
         elif symbol == SPACE:
             index += 1
         elif symbol == OPERATOR:
@@ -104,7 +108,7 @@ def get_token(pascal_file):
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:])
             index += len(word)
-            print TOKEN_STRING_LIT
+            print TOKEN_STRING_LIT, word
         elif symbol == EOL:
             index += 1
             line_number += 1
