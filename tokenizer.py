@@ -4,9 +4,13 @@ Return tokens
 """
 
 from pascal_loader import symbol_map, LETTER, RESERVED, SPACE, DIGIT, OPERATOR, EOL, QUOTE
+from pascal_loader import PascalError, DOT, SEMICOLON
 
 TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
+TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
+TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
+TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + ';'
 
 string_store = set()
 
@@ -16,7 +20,7 @@ def token_name(suffix):
 
 keyword_tokens = {}
 for keyword, value in symbol_map.items():
-    if value == 1:
+    if value == RESERVED:
         keyword_tokens[keyword.lower()] = TOKEN_NAME_PREFIX + keyword.upper()
         keyword_tokens[keyword.upper()] = TOKEN_NAME_PREFIX + keyword.upper()
 
@@ -46,7 +50,29 @@ def case_quote(text_segment):
                 suffix += character
                 first_quote = True
         else:
+            if character_value == EOL:
+                # TODO: row/column number
+                raise PascalError('Not a valid string.')
             suffix += character
+
+
+def case_digit(text_segment):
+    val = ''
+    valid_float = False
+    for character in text_segment:
+        character_value = symbol_map.get(character, None)
+        if character_value == DIGIT:
+            val += character
+            valid_float = True
+        elif character_value == DOT:
+            if valid_float:
+                if val.__contains__('.'):
+                    # Does scanner throw error .5?
+                    raise PascalError('Not a valid float.')
+                else:
+                    val += character
+            else:
+                raise PascalError('')
 
 
 def get_token(pascal_file):
@@ -61,16 +87,19 @@ def get_token(pascal_file):
     index = 0
     while index < len(pascal_file.contents):
         symbol = symbol_map[pascal_file.contents[index]]
-        print symbol
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
-            print token_name(word)
+            if keyword_tokens.get(word) is not None:
+                print keyword_tokens.get(word)
+            else:
+                print token_name(word)
         elif symbol == DIGIT:
             index += 1
         elif symbol == SPACE:
             index += 1
         elif symbol == OPERATOR:
+            print token_name(pascal_file.contents[index])
             index += 1
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:])
@@ -79,6 +108,13 @@ def get_token(pascal_file):
         elif symbol == EOL:
             index += 1
             line_number += 1
+        elif symbol == DOT:
+            print TOKEN_EOF
+            index += 1
+        elif symbol == SEMICOLON:
+            print TOKEN_SEMICOLON
+            index += 1
         else:
             index += 1
-            print symbol
+            print 'else %i' % symbol
+    print token_name('EOF')
