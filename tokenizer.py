@@ -59,20 +59,37 @@ def case_quote(text_segment):
 def case_digit(text_segment):
     suffix = ''
     valid_float = False
-    for character in text_segment:
+    index = 0
+    while index < len(text_segment):
+        character = text_segment[index]
         character_value = symbol_map.get(character, None)
         if character_value == DIGIT:
             suffix += character
             valid_float = True
+            index += 1
+        elif character == '-':
+            suffix += character
+            index += 1
         elif character_value == DOT:
             if valid_float:
-                if suffix.__contains__('.'):
+                if suffix.__contains__('.') or symbol_map.get(text_segment[index + 1]) is not DIGIT:
                     # Does scanner throw error .5?
                     raise PascalError('Not a valid float.')
                 else:
                     suffix += character
+                    index += 1
             else:
                 raise PascalError('')
+        elif character.lower() == 'e':
+            if text_segment[index + 1] == '-':
+                suffix += character
+                suffix += text_segment[index + 1]
+                index += 2
+            elif symbol_map.get(text_segment[index + 1]) is DIGIT:
+                suffix += character
+                index += 1
+            else:
+                raise PascalError('Not a valid float.')
         else:
             return suffix
 
@@ -101,10 +118,18 @@ def get_token(pascal_file):
             index += len(word)
             print TOKEN_INT_LIT, word.replace('\'', '')
         elif symbol == SPACE:
+            column_number += 1
             index += 1
         elif symbol == OPERATOR:
-            print token_name(pascal_file.contents[index])
-            index += 1
+            # TODO: Ask about negative float
+            if pascal_file.contents[index] == '-':
+                if symbol_map.get(pascal_file.contents[index + 1]) is DIGIT:
+                    word = case_digit(pascal_file.contents[index:])
+                    print token_name(word)
+                    index += len(word)
+            else:
+                print token_name(pascal_file.contents[index])
+                index += 1
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:])
             index += len(word)

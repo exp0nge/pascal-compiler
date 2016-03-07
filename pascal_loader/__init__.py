@@ -17,7 +17,12 @@ SEMICOLON = 9
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 OPERATORS = '+-,()<>'
 
-symbol_map = {' ': SPACE, '\n': EOL, '\'': QUOTE, '.': DOT, '{*': COMMENT, ';': SEMICOLON}
+symbol_map = {' ': SPACE,
+              '\n': EOL,
+              '\'': QUOTE,
+              '.': DOT,
+              '{*': COMMENT,
+              ';': SEMICOLON}
 
 for character in ALPHABET:
     symbol_map[character] = LETTER
