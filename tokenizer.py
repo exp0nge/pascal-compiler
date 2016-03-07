@@ -4,13 +4,14 @@ Return tokens
 """
 
 from pascal_loader import symbol_map, LETTER, RESERVED, SPACE, DIGIT, OPERATOR, EOL, QUOTE
-from pascal_loader import PascalError, DOT, SEMICOLON
+from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT
 
 TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
 TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + ';'
+TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
 
 string_store = set()
 
@@ -56,25 +57,38 @@ def case_quote(text_segment):
             suffix += character
 
 
+def case_comment(text_segment):
+    index = 0
+    word = ''
+    while index < len(text_segment):
+        character = text_segment[index]
+        if character == '}':
+            return word + character
+        elif character == '*' and text_segment[index + 1] == ')':
+            # handle (* *) style comments
+            return word + character + text_segment[index + 1]
+        else:
+            word += character
+            index += 1
+
+
 def case_digit(text_segment):
     suffix = ''
-    valid_float = False
+    digit_seen = False
     index = 0
     while index < len(text_segment):
         character = text_segment[index]
         character_value = symbol_map.get(character, None)
         if character_value == DIGIT:
             suffix += character
-            valid_float = True
-            index += 1
-        elif character == '-':
-            suffix += character
+            digit_seen = True
             index += 1
         elif character_value == DOT:
-            if valid_float:
-                if suffix.__contains__('.') or symbol_map.get(text_segment[index + 1]) is not DIGIT:
-                    # Does scanner throw error .5?
-                    raise PascalError('Not a valid float.')
+            if digit_seen:
+                # TODO: handle 3..2, 3 tokens
+                if suffix.__contains__('.') and symbol_map.get(text_segment[index + 1]) is DOT:
+                    # Got a range number .. number
+                    pass
                 else:
                     suffix += character
                     index += 1
@@ -105,7 +119,7 @@ def get_token(pascal_file):
     state = False, False
     index = 0
     while index < len(pascal_file.contents):
-        symbol = symbol_map[pascal_file.contents[index]]
+        symbol = symbol_map.get(pascal_file.contents[index])
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
@@ -121,12 +135,11 @@ def get_token(pascal_file):
             column_number += 1
             index += 1
         elif symbol == OPERATOR:
-            # TODO: Ask about negative float
-            if pascal_file.contents[index] == '-':
-                if symbol_map.get(pascal_file.contents[index + 1]) is DIGIT:
-                    word = case_digit(pascal_file.contents[index:])
-                    print token_name(word)
-                    index += len(word)
+            if pascal_file.contents[index] == '(' and pascal_file.contents[index + 1] == '*':
+                # could be a comment, check it
+                word = case_comment(pascal_file.contents[index:])
+                print TOKEN_COMMENT, word
+                index += len(word)
             else:
                 print token_name(pascal_file.contents[index])
                 index += 1
@@ -143,7 +156,12 @@ def get_token(pascal_file):
         elif symbol == SEMICOLON:
             print TOKEN_SEMICOLON
             index += 1
+        elif symbol == COMMENT:
+            word = case_comment(pascal_file.contents[index:])
+            index += len(word)
+            print TOKEN_COMMENT, word
         else:
             index += 1
-            print 'else %i' % symbol
+            print symbol
     print token_name('EOF')
+    print 'string store:', string_store

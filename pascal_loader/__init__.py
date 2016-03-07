@@ -21,7 +21,7 @@ symbol_map = {' ': SPACE,
               '\n': EOL,
               '\'': QUOTE,
               '.': DOT,
-              '{*': COMMENT,
+              '{': COMMENT,
               ';': SEMICOLON}
 
 for character in ALPHABET:
