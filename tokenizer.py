@@ -12,6 +12,7 @@ TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + ';'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
+TOKEN_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
 
 string_store = set()
 
@@ -139,6 +140,10 @@ def get_token(pascal_file):
                 # could be a comment, check it
                 word = case_comment(pascal_file.contents[index:])
                 print TOKEN_COMMENT, word
+                index += len(word)
+            elif pascal_file.contents[index] == ':' and pascal_file.contents[index + 1] == '=':
+                word = pascal_file.contents[index] + pascal_file.contents[index + 1]
+                print TOKEN_ASSIGNMENT, word
                 index += len(word)
             else:
                 print token_name(pascal_file.contents[index])

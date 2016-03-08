@@ -1,9 +1,26 @@
-program Hello;
+program exLocal;
+var
+   a, b, c: integer;
+procedure display;
+
+var
+   a, b, c: integer;
 begin
-    writeln(3 + 2);
-    writeln(-5e-3);
-    writeln(.99);
-    writeln ('Hello, world.');
-    { hello }
-    (* inline comment *)
+   (* local variables *)
+   a := 10;
+   b := 20;
+   c := a + b;
+
+   writeln('Winthin the procedure display');
+   writeln('value of a = ', a , ' b =  ',  b, ' and c = ', c);
+end;
+
+begin
+   a:= 100;
+   b:= 200;
+   c:= a + b;
+
+   writeln('Winthin the program exlocal');
+   writeln('value of a = ', a , ' b =  ',  b, ' and c = ', c);
+   display();
 end.
