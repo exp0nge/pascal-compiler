@@ -167,6 +167,12 @@ def get_token(pascal_file):
                 index += len(word)
                 print Token(word, TOKEN_ASSIGNMENT, row, column)
                 column += len(word)
+            elif pascal_file.contents[index] == '/' and pascal_file.contents[index + 1] == '/':
+                # got a inline comment
+                word = '//'
+                index += 2
+                print Token(word, TOKEN_COMMENT, row, column)
+                column += 2
             else:
                 word = pascal_file.contents[index]
                 index += 1
