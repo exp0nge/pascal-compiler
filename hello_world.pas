@@ -6,6 +6,9 @@ procedure display;
 var
    a, b, c: integer;
 begin
+    {* range *}
+    //writeln(3..2);
+
    (* local variables *)
    a := 10;
    b := 20;

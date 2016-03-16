@@ -10,11 +10,31 @@ TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
 TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
-TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + ';'
+TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + 'SEMICOLON'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
 TOKEN_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
+TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
+TOKEN_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
+TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
 
 string_store = set()
+
+
+class Token(object):
+    """
+    Token object class
+    """
+    def __init__(self, value_of, type_of, row, column):
+        self.value_of = value_of
+        self.type_of = type_of
+        self.row = row
+        self.column = column
+
+    def __unicode__(self):
+        return '<%s, %s, %i, %i>' % (self.value_of, self.type_of, self.row, self.column)
+
+    def __repr__(self):
+        return self.__unicode__()
 
 
 def token_name(suffix):
@@ -37,10 +57,9 @@ def case_letter(text_segment):
             return suffix
 
 
-def case_quote(text_segment):
+def case_quote(text_segment, row, column):
     suffix = ''
     first_quote = False
-    escape_check = False
     for character in text_segment:
         character_value = symbol_map.get(character, None)
         if character_value == QUOTE:
@@ -52,9 +71,11 @@ def case_quote(text_segment):
                 suffix += character
                 first_quote = True
         else:
+            if character == '\n':
+                row += 1
             if character_value == EOL:
-                # TODO: row/column number
-                raise PascalError('Not a valid string.')
+                column += len(suffix)
+                raise PascalError('Not a valid string. (ln %i,col %i)' % (row, column))
             suffix += character
 
 
@@ -89,7 +110,9 @@ def case_digit(text_segment):
                 # TODO: handle 3..2, 3 tokens
                 if suffix.__contains__('.') and symbol_map.get(text_segment[index + 1]) is DOT:
                     # Got a range number .. number
-                    pass
+                    suffix += character
+                    suffix += text_segment[index + 1]
+                    index += 2
                 else:
                     suffix += character
                     index += 1
@@ -115,58 +138,63 @@ def get_token(pascal_file):
     :param pascal_file: PascalFile
     :return:
     """
-    line_number = 0
-    column_number = 0
-    state = False, False
-    index = 0
+    row, column, index = 1, 0, 0
     while index < len(pascal_file.contents):
         symbol = symbol_map.get(pascal_file.contents[index])
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
-            if keyword_tokens.get(word) is not None:
-                print keyword_tokens.get(word)
-            else:
-                print token_name(word)
+            print Token(word, TOKEN_STRING_LIT, row, column)
+            column += len(word)
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
             index += len(word)
-            print TOKEN_INT_LIT, word.replace('\'', '')
+            print Token(word, TOKEN_INT_LIT, row, column)
+            column += len(word)
         elif symbol == SPACE:
-            column_number += 1
+            column += 1
             index += 1
         elif symbol == OPERATOR:
             if pascal_file.contents[index] == '(' and pascal_file.contents[index + 1] == '*':
                 # could be a comment, check it
                 word = case_comment(pascal_file.contents[index:])
-                print TOKEN_COMMENT, word
                 index += len(word)
+                print Token(word, TOKEN_COMMENT, row, column)
+                column += len(word)
             elif pascal_file.contents[index] == ':' and pascal_file.contents[index + 1] == '=':
+                # check for assignment
                 word = pascal_file.contents[index] + pascal_file.contents[index + 1]
-                print TOKEN_ASSIGNMENT, word
                 index += len(word)
+                print Token(word, TOKEN_ASSIGNMENT, row, column)
+                column += len(word)
             else:
-                print token_name(pascal_file.contents[index])
+                word = pascal_file.contents[index]
                 index += 1
+                print Token(word, TOKEN_OPERATOR, row, column)
         elif symbol == QUOTE:
-            word = case_quote(pascal_file.contents[index:])
+            word = case_quote(pascal_file.contents[index:], row, column)
             index += len(word)
-            print TOKEN_STRING_LIT, word
+            print Token(word, TOKEN_QUOTE, row, column)
+            column += len(word)
         elif symbol == EOL:
             index += 1
-            line_number += 1
+            row += 1
+            column = 0
         elif symbol == DOT:
-            print TOKEN_EOF
             index += 1
+            print Token('.', TOKEN_EOF, row, column)
+            column += 1
         elif symbol == SEMICOLON:
-            print TOKEN_SEMICOLON
             index += 1
+            print Token(';', TOKEN_SEMICOLON, row, column)
+            column += 1
         elif symbol == COMMENT:
             word = case_comment(pascal_file.contents[index:])
             index += len(word)
-            print TOKEN_COMMENT, word
+            print Token(word, TOKEN_COMMENT, row, column)
+            column += len(word)
         else:
             index += 1
-            print symbol
-    print token_name('EOF')
+            raise PascalError('Unknown symbol: %s (ln %i, col %i)' % (symbol, row, column))
+    print Token('EOF', TOKEN_EOF, row, column)
     print 'string store:', string_store

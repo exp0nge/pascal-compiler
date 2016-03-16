@@ -5,6 +5,7 @@
 
 VARIABLE = 'var'  # var a;
 FUNCTION = 'func'  # (a + 1) == 2
+PROCEDURE = 'pro'
 EXPRESSIONS = 'expr'  # a = 1.0;
 STATEMENTS = 'stat'  # int pow(int n, int m)
 PARAMETER = 'par'

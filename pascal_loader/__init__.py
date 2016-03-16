@@ -15,7 +15,7 @@ DOT = 7
 COMMENT = 8
 SEMICOLON = 9
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-OPERATORS = '+-,()<>:='
+OPERATORS = '+-/,()<>:='
 
 symbol_map = {' ': SPACE,
               '\n': EOL,
