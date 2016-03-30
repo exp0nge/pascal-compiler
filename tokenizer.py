@@ -16,6 +16,7 @@ TOKEN_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
 TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
 TOKEN_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
+TOKEN_RESERVED = TOKEN_NAME_PREFIX + 'RESERVED'
 
 string_store = set()
 
@@ -43,8 +44,8 @@ def token_name(suffix):
 keyword_tokens = {}
 for keyword, value in symbol_map.items():
     if value == RESERVED:
-        keyword_tokens[keyword.lower()] = TOKEN_NAME_PREFIX + keyword.upper()
-        keyword_tokens[keyword.upper()] = TOKEN_NAME_PREFIX + keyword.upper()
+        keyword_tokens[keyword.lower()] = TOKEN_RESERVED
+        keyword_tokens[keyword.upper()] = TOKEN_RESERVED
 
 
 def case_letter(text_segment):
@@ -117,9 +118,9 @@ def case_digit(text_segment):
                     suffix += character
                     index += 1
             else:
-                raise PascalError('')
+                raise PascalError('Invalid literal.')
         elif character.lower() == 'e':
-            if text_segment[index + 1] == '-':
+            if text_segment[index + 1] == '-' or text_segment[index + 1] == '+':
                 suffix += character
                 suffix += text_segment[index + 1]
                 index += 2
@@ -127,7 +128,7 @@ def case_digit(text_segment):
                 suffix += character
                 index += 1
             else:
-                raise PascalError('Not a valid float.')
+                raise PascalError('Invalid literal.')
         else:
             return suffix
 
@@ -138,13 +139,16 @@ def get_token(pascal_file):
     :param pascal_file: PascalFile
     :return:
     """
-    row, column, index = 1, 0, 0
+    row, column, index = 1, 1, 0
     while index < len(pascal_file.contents):
         symbol = symbol_map.get(pascal_file.contents[index])
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
-            print Token(word, TOKEN_STRING_LIT, row, column)
+            if keyword_tokens.get(word) is None:
+                print Token(word, TOKEN_STRING_LIT, row, column)
+            else:
+                print Token(word, TOKEN_RESERVED, row, column)
             column += len(word)
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
