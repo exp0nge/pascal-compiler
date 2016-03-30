@@ -4,7 +4,7 @@ Return tokens
 """
 
 from pascal_loader import symbol_map, LETTER, RESERVED, SPACE, DIGIT, OPERATOR, EOL, QUOTE
-from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT
+from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT, COMMENT_TYPES
 
 TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
@@ -12,7 +12,6 @@ TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + 'SEMICOLON'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
-TOKEN_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
 TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
 TOKEN_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
@@ -25,6 +24,7 @@ class Token(object):
     """
     Token object class
     """
+
     def __init__(self, value_of, type_of, row, column):
         self.value_of = value_of
         self.type_of = type_of
@@ -39,16 +39,24 @@ class Token(object):
 
 
 def token_name(suffix):
+    """
+    Returns token prefix + given suffix
+    """
     return TOKEN_NAME_PREFIX + suffix.upper()
 
-keyword_tokens = {}
+
+# Store reserved words
+reserved_tokens = {}
 for keyword, value in symbol_map.items():
     if value == RESERVED:
-        keyword_tokens[keyword.lower()] = TOKEN_RESERVED
-        keyword_tokens[keyword.upper()] = TOKEN_RESERVED
+        reserved_tokens[keyword.lower()] = TOKEN_RESERVED
+        reserved_tokens[keyword.upper()] = TOKEN_RESERVED
 
 
 def case_letter(text_segment):
+    """
+    Handles case for letter
+    """
     suffix = ''
     for character in text_segment:
         character_value = symbol_map.get(character, None)
@@ -59,6 +67,9 @@ def case_letter(text_segment):
 
 
 def case_quote(text_segment, row, column):
+    """
+    Handles case for quote
+    """
     suffix = ''
     first_quote = False
     for character in text_segment:
@@ -81,6 +92,9 @@ def case_quote(text_segment, row, column):
 
 
 def case_comment(text_segment):
+    """
+    Handles case comment
+    """
     index = 0
     word = ''
     while index < len(text_segment):
@@ -95,7 +109,25 @@ def case_comment(text_segment):
             index += 1
 
 
+def case_comment_inline(text_segment):
+    """
+    Handles inline comments
+    """
+    index = 0
+    word = ''
+    while index < len(text_segment):
+        character = text_segment[index]
+        if character == '\n':
+            return word
+        else:
+            word += character
+        index += 1
+
+
 def case_digit(text_segment):
+    """
+    Handles case digit
+    """
     suffix = ''
     digit_seen = False
     index = 0
@@ -133,6 +165,24 @@ def case_digit(text_segment):
             return suffix
 
 
+def case_operator(text_segment):
+    """
+    Handles case operator
+    """
+    index = 0
+    if text_segment[index] == '(' and text_segment[index + 1] == '*':
+        # could be a comment, check it
+        return case_comment(text_segment[index:])
+    elif text_segment[index] == ':' and text_segment[index + 1] == '=':
+        # check for assignment
+        return text_segment[index] + text_segment[index + 1]
+    elif text_segment[index] == '/' and text_segment[index + 1] == '/':
+        # got a inline comment
+        return case_comment_inline(text_segment[index:])
+    else:
+        return text_segment[index]
+
+
 def get_token(pascal_file):
     """
 
@@ -145,7 +195,7 @@ def get_token(pascal_file):
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
-            if keyword_tokens.get(word) is None:
+            if reserved_tokens.get(word) is None:
                 print Token(word, TOKEN_STRING_LIT, row, column)
             else:
                 print Token(word, TOKEN_RESERVED, row, column)
@@ -159,28 +209,14 @@ def get_token(pascal_file):
             column += 1
             index += 1
         elif symbol == OPERATOR:
-            if pascal_file.contents[index] == '(' and pascal_file.contents[index + 1] == '*':
-                # could be a comment, check it
-                word = case_comment(pascal_file.contents[index:])
-                index += len(word)
+            word = case_operator(pascal_file.contents[index:])
+            index += len(word)
+            if word[:2] in COMMENT_TYPES:
+                # checks for cases such as '//' or '(*'
                 print Token(word, TOKEN_COMMENT, row, column)
-                column += len(word)
-            elif pascal_file.contents[index] == ':' and pascal_file.contents[index + 1] == '=':
-                # check for assignment
-                word = pascal_file.contents[index] + pascal_file.contents[index + 1]
-                index += len(word)
-                print Token(word, TOKEN_ASSIGNMENT, row, column)
-                column += len(word)
-            elif pascal_file.contents[index] == '/' and pascal_file.contents[index + 1] == '/':
-                # got a inline comment
-                word = '//'
-                index += 2
-                print Token(word, TOKEN_COMMENT, row, column)
-                column += 2
             else:
-                word = pascal_file.contents[index]
-                index += 1
                 print Token(word, TOKEN_OPERATOR, row, column)
+            column += len(word)
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:], row, column)
             index += len(word)
@@ -189,7 +225,8 @@ def get_token(pascal_file):
         elif symbol == EOL:
             index += 1
             row += 1
-            column = 0
+            # reset column
+            column = 1
         elif symbol == DOT:
             index += 1
             print Token('.', TOKEN_EOF, row, column)
