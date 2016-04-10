@@ -1,5 +1,6 @@
 program assignments;
-    var x : integer;
+    var x, y : integer;
+    var z : real;
 begin
     x := 20;
 end.

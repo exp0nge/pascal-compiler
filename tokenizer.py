@@ -13,7 +13,6 @@ TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + 'SEMICOLON'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
 TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
-TOKEN_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
 TOKEN_OPERATOR_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
 TOKEN_OPERATOR_LEFT_PAREN = TOKEN_NAME_PREFIX + 'LPAREN'
@@ -24,7 +23,12 @@ TOKEN_OPERATOR_DIVISION = TOKEN_NAME_PREFIX + '/'
 TOKEN_OPERATOR_LEFT_CHEVRON = TOKEN_NAME_PREFIX + '<'
 TOKEN_OPERATOR_RIGHT_CHEVRON = TOKEN_NAME_PREFIX + '>'
 TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
-TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + ','
+TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
+
+TOKEN_DATA_TYPE_INT = TOKEN_NAME_PREFIX + 'INTEGER'
+TOKEN_DATA_TYPE_REAL = TOKEN_NAME_PREFIX + 'REAL'
+TOKEN_DATA_TYPE_CHAR = TOKEN_NAME_PREFIX + 'CHAR'
+TOKEN_DATA_TYPE_BOOL = TOKEN_NAME_PREFIX + 'BOOL'
 
 TOKEN_RESERVED = TOKEN_NAME_PREFIX + 'RESERVED'
 
@@ -56,8 +60,11 @@ def token_name(suffix):
     return TOKEN_NAME_PREFIX + suffix.upper()
 
 
-# Store reserved words
-reserved_tokens = {}
+# Store reserved words with some system variables
+reserved_tokens = {'integer': TOKEN_DATA_TYPE_INT,
+                   'real': TOKEN_DATA_TYPE_REAL,
+                   'char': TOKEN_DATA_TYPE_CHAR,
+                   'boolean': TOKEN_DATA_TYPE_BOOL}
 for keyword, value in symbol_map.items():
     if value == RESERVED:
         reserved_tokens[keyword.lower()] = TOKEN_RESERVED
@@ -215,20 +222,21 @@ def get_token(pascal_file):
     :return:
     """
     row, column, index = 1, 1, 0
+    token_list = []
     while index < len(pascal_file.contents):
         symbol = symbol_map.get(pascal_file.contents[index])
         if symbol == LETTER:
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
             if reserved_tokens.get(word) is None:
-                print Token(word, TOKEN_STRING_LIT, row, column)
+                token_list.append(Token(word, TOKEN_STRING_LIT, row, column))
             else:
-                print Token(word, token_name(word), row, column)
+                token_list.append(Token(word, token_name(word), row, column))
             column += len(word)
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
             index += len(word)
-            print Token(word, TOKEN_INT_LIT, row, column)
+            token_list.append(Token(word, TOKEN_INT_LIT, row, column))
             column += len(word)
         elif symbol == SPACE:
             column += 1
@@ -238,14 +246,14 @@ def get_token(pascal_file):
             index += len(word)
             if word[:2] in COMMENT_TYPES:
                 # checks for cases such as '//' or '(*'
-                print Token(word, TOKEN_COMMENT, row, column)
+                token_list.append(Token(word, TOKEN_COMMENT, row, column))
             else:
-                print Token(word, operators_classifications[word], row, column)
+                token_list.append(Token(word, operators_classifications[word], row, column))
             column += len(word)
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:], row, column)
             index += len(word)
-            print Token(word, TOKEN_QUOTE, row, column)
+            token_list.append(Token(word, TOKEN_QUOTE, row, column))
             column += len(word)
         elif symbol == EOL:
             index += 1
@@ -254,19 +262,19 @@ def get_token(pascal_file):
             column = 1
         elif symbol == DOT:
             index += 1
-            print Token('.', TOKEN_EOF, row, column)
+            token_list.append(Token('.', TOKEN_EOF, row, column))
             column += 1
         elif symbol == SEMICOLON:
             index += 1
-            print Token(';', TOKEN_SEMICOLON, row, column)
+            token_list.append(Token(';', TOKEN_SEMICOLON, row, column))
             column += 1
         elif symbol == COMMENT:
             word = case_comment(pascal_file.contents[index:])
             index += len(word)
-            print Token(word, TOKEN_COMMENT, row, column)
+            token_list.append(Token(word, TOKEN_COMMENT, row, column))
             column += len(word)
         else:
             index += 1
             raise PascalError('Unknown symbol: %s (ln %i, col %i)' % (symbol, row, column))
-    print Token('EOF', TOKEN_EOF, row, column)
-    print 'string store:', string_store
+    token_list.append(Token('EOF', TOKEN_EOF, row, column))
+    return token_list
