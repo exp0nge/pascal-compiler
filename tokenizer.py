@@ -15,6 +15,17 @@ TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
 TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
 TOKEN_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
+TOKEN_OPERATOR_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
+TOKEN_OPERATOR_LEFT_PAREN = TOKEN_NAME_PREFIX + 'LPAREN'
+TOKEN_OPERATOR_RIGHT_PAREN = TOKEN_NAME_PREFIX + 'RPAREN'
+TOKEN_OPERATOR_PLUS = TOKEN_NAME_PREFIX + '+'
+TOKEN_OPERATOR_MINUS = TOKEN_NAME_PREFIX + '-'
+TOKEN_OPERATOR_DIVISION = TOKEN_NAME_PREFIX + '/'
+TOKEN_OPERATOR_LEFT_CHEVRON = TOKEN_NAME_PREFIX + '<'
+TOKEN_OPERATOR_RIGHT_CHEVRON = TOKEN_NAME_PREFIX + '>'
+TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
+TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + ','
+
 TOKEN_RESERVED = TOKEN_NAME_PREFIX + 'RESERVED'
 
 string_store = set()
@@ -51,6 +62,20 @@ for keyword, value in symbol_map.items():
     if value == RESERVED:
         reserved_tokens[keyword.lower()] = TOKEN_RESERVED
         reserved_tokens[keyword.upper()] = TOKEN_RESERVED
+
+# Operators dictionary
+operators_classifications = {
+    ':=': TOKEN_OPERATOR_ASSIGNMENT,
+    '(': TOKEN_OPERATOR_LEFT_PAREN,
+    ')': TOKEN_OPERATOR_RIGHT_PAREN,
+    '+': TOKEN_OPERATOR_PLUS,
+    '-': TOKEN_OPERATOR_MINUS,
+    '/': TOKEN_OPERATOR_DIVISION,
+    '<': TOKEN_OPERATOR_LEFT_CHEVRON,
+    '>': TOKEN_OPERATOR_RIGHT_CHEVRON,
+    ',': TOKEN_OPERATOR_COMMA,
+    ':': TOKEN_OPERATOR_COLON,
+}
 
 
 def case_letter(text_segment):
@@ -198,7 +223,7 @@ def get_token(pascal_file):
             if reserved_tokens.get(word) is None:
                 print Token(word, TOKEN_STRING_LIT, row, column)
             else:
-                print Token(word, TOKEN_RESERVED, row, column)
+                print Token(word, token_name(word), row, column)
             column += len(word)
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
@@ -215,7 +240,7 @@ def get_token(pascal_file):
                 # checks for cases such as '//' or '(*'
                 print Token(word, TOKEN_COMMENT, row, column)
             else:
-                print Token(word, TOKEN_OPERATOR, row, column)
+                print Token(word, operators_classifications[word], row, column)
             column += len(word)
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:], row, column)

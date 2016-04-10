@@ -1,4 +1,4 @@
-program exLocal;
+program scope;
 var
    a, b, c: integer;
 procedure display;
