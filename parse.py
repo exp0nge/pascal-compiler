@@ -38,6 +38,13 @@ class Parser(object):
                                                                           self.current_token.row,
                                                                           self.current_token.column))
 
+    def byte_packer(self, value_to_pack):
+        return (value_to_pack >> 24) & 0xFF, (value_to_pack >> 16) & 0xFF, (
+            value_to_pack >> 8) & 0xFF, value_to_pack & 0xFF
+
+    def byte_unpacker(self, byte_list):
+        return (byte_list[0] << 24) | (byte_list[1] << 16) | (byte_list[2] << 8) | (byte_list[3])
+
     def generate_op_code(self, op_code):
         self.byte_array.append(op_code)
         self.ip += 1
