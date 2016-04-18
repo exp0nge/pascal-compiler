@@ -3,12 +3,12 @@
 
 # Notations from: http://www.cs.cornell.edu/courses/cs412/2008sp/lectures/lec12.pdf
 
-VARIABLE = 'var'  # var a;
-FUNCTION = 'func'  # (a + 1) == 2
-PROCEDURE = 'pro'
-EXPRESSIONS = 'expr'  # a = 1.0;
-STATEMENTS = 'stat'  # int pow(int n, int m)
-PARAMETER = 'par'
+TYPE_VARIABLE = 'var'  # var a;
+TYPE_FUNCTION = 'func'  # (a + 1) == 2
+TYPE_PROCEDURE = 'pro'
+TYPE_EXPRESSIONS = 'expr'  # a = 1.0;
+TYPE_STATEMENTS = 'stat'  # int pow(int n, int m)
+TYPE_PARAMETER = 'par'
 
 
 class SymbolObject(object):
@@ -20,18 +20,18 @@ class SymbolObject(object):
     attribute: static
     kind: var
     """
-    def __init__(self, name, data_type, kind, attribute=None, others=None):
+    def __init__(self, name, type_of_object, kind, attribute=None, others=None):
         """
 
         :param name: str
-        :param data_type: str
+        :param type_of_object: str
         :param kind: str
         :param attribute: str
         :param others: list
         :return:
         """
         self.name = name
-        self.data_type = data_type
+        self.type_of_object = type_of_object
         self.kind = kind
         self.attribute = attribute
         if others is None:
@@ -40,4 +40,4 @@ class SymbolObject(object):
             self.others = []
 
     def __unicode__(self):
-        return '<%s, %s, %s>' % (self.name, self.data_type, self.kind)
+        return '<%s, %s, %s>' % (self.name, self.type_of_object, self.kind)

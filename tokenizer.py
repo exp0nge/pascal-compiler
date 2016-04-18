@@ -8,11 +8,10 @@ from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT, COMMENT_TYPES
 
 TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
-TOKEN_INT_LIT = TOKEN_NAME_PREFIX + 'INTLIT'
+TOKEN_ID = TOKEN_NAME_PREFIX + 'ID'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + 'SEMICOLON'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
-TOKEN_QUOTE = TOKEN_NAME_PREFIX + 'QUOTE'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
 TOKEN_OPERATOR_ASSIGNMENT = TOKEN_NAME_PREFIX + 'ASSIGNMENT'
 TOKEN_OPERATOR_LEFT_PAREN = TOKEN_NAME_PREFIX + 'LPAREN'
@@ -20,6 +19,7 @@ TOKEN_OPERATOR_RIGHT_PAREN = TOKEN_NAME_PREFIX + 'RPAREN'
 TOKEN_OPERATOR_PLUS = TOKEN_NAME_PREFIX + '+'
 TOKEN_OPERATOR_MINUS = TOKEN_NAME_PREFIX + '-'
 TOKEN_OPERATOR_DIVISION = TOKEN_NAME_PREFIX + '/'
+TOKEN_OPERATOR_MULTIPLICATION = TOKEN_NAME_PREFIX + '*'
 TOKEN_OPERATOR_LEFT_CHEVRON = TOKEN_NAME_PREFIX + '<'
 TOKEN_OPERATOR_RIGHT_CHEVRON = TOKEN_NAME_PREFIX + '>'
 TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
@@ -82,6 +82,7 @@ operators_classifications = {
     '>': TOKEN_OPERATOR_RIGHT_CHEVRON,
     ',': TOKEN_OPERATOR_COMMA,
     ':': TOKEN_OPERATOR_COLON,
+    '*': TOKEN_OPERATOR_MULTIPLICATION
 }
 
 
@@ -229,14 +230,14 @@ def get_token(pascal_file):
             word = case_letter(pascal_file.contents[index:])
             index += len(word)
             if reserved_tokens.get(word) is None:
-                token_list.append(Token(word, TOKEN_STRING_LIT, row, column))
+                token_list.append(Token(word, TOKEN_ID, row, column))
             else:
                 token_list.append(Token(word, token_name(word), row, column))
             column += len(word)
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
             index += len(word)
-            token_list.append(Token(word, TOKEN_INT_LIT, row, column))
+            token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
             column += len(word)
         elif symbol == SPACE:
             column += 1
@@ -253,7 +254,7 @@ def get_token(pascal_file):
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:], row, column)
             index += len(word)
-            token_list.append(Token(word, TOKEN_QUOTE, row, column))
+            token_list.append(Token(word, TOKEN_STRING_LIT, row, column))
             column += len(word)
         elif symbol == EOL:
             index += 1
