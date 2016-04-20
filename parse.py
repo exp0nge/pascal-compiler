@@ -2,7 +2,7 @@
 from pascal_loader import PascalError
 import pascal_loader.symbol_tables as symbol_tables
 import tokenizer
-from constants import OPCODE
+from constants import OPCODE, TYPE
 
 
 class Parser(object):
@@ -92,7 +92,7 @@ class Parser(object):
         for variable in declarations:
             self.symbol_table.append(symbol_tables.SymbolObject(name=variable,
                                                                 type_of_object=symbol_tables.TYPE_VARIABLE,
-                                                                kind=data_type))
+                                                                data_type=data_type))
             self.ip += 1
         # check for more var
         if self.current_token.type_of == 'TK_VAR':
@@ -114,7 +114,7 @@ class Parser(object):
                 raise PascalError('Variable %s is not declared (%i, %i)' % (self.current_token.value_of,
                                                                             self.current_token.row,
                                                                             self.current_token.column))
-            lhs_type = symbol.kind
+            lhs_type = symbol.data_type
             self.match(tokenizer.TOKEN_ID)
         else:
             lhs_type = tokenizer.TOKEN_DATA_TYPE_INT
@@ -156,38 +156,90 @@ class Parser(object):
         else:
             self.begin()
 
+    def emit(self, operator, t_1, t_2):
+        pass
+
     def expression(self):
-        tail_1 = self.t()
-        while self.current_token.type_of == tokenizer.TOKEN_OPERATOR_PLUS or self.current_token.type_of == tokenizer.TOKEN_OPERATOR_MINUS:
-            operator = self.current_token.type_of
-            self.match(operator)
-            tail_2 = self.t()
-            tail_1 = self.emit(operator, tail_1, tail_2)
+        """
+        E -> TE`
+        :return:
+        """
+        # tail_1 = self.t()
+        # while self.current_token.type_of == tokenizer.TOKEN_OPERATOR_PLUS or self.current_token.type_of == tokenizer.TOKEN_OPERATOR_MINUS:
+        #     operator = self.current_token.type_of
+        #     self.match(operator)
+        #     tail_2 = self.t()
+        #     tail_1 = self.emit(operator, tail_1, tail_2)
+        self.t()
+        self.e_prime()
 
     def t(self):
+        """
+        T -> FT`
+        :return:
+        """
         self.f()
         self.t_prime()
 
     def t_prime(self):
+        """
+        T` -> epsilon | * FT` | / FT`
+        :return:
+        """
         token_type = self.current_token.type_of
         if token_type == tokenizer.TOKEN_OPERATOR_MULTIPLICATION:
-            pass
+            # generate
+            self.match(tokenizer.TOKEN_OPERATOR_MULTIPLICATION)
+            self.f()
+            self.t_prime()
         elif token_type == tokenizer.TOKEN_OPERATOR_DIVISION:
-            pass
+            self.match(tokenizer.TOKEN_OPERATOR_DIVISION)
+            self.f()
+            self.t_prime()
         else:
             return
 
     def f(self):
+        """
+        F -> ( E ) | + F | - F | not F | id | lit
+        :return:
+        """
         token_type = self.current_token.type_of
         if token_type == tokenizer.TOKEN_ID:
-            pass
-        elif token_type == tokenizer.TOKEN_STRING_LIT:
-            pass
+            self.match(token_type)
+            return self.current_token.data_type
+        elif token_type == (tokenizer.TOKEN_DATA_TYPE_INT or
+                                tokenizer.TOKEN_DATA_TYPE_REAL or
+                                tokenizer.TOKEN_DATA_TYPE_CHAR or
+                                tokenizer.TOKEN_DATA_TYPE_CHAR):
+            self.match(token_type)
+            return TYPE.I
         elif token_type == tokenizer.TOKEN_OPERATOR_PLUS:
             pass
         elif token_type == tokenizer.TOKEN_OPERATOR_MINUS:
             pass
         elif token_type == tokenizer.TOKEN_OPERATOR_LEFT_PAREN:
-            pass
+            self.match(token_type)
+            self.expression()
+            self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
         else:
             raise PascalError('F() fails on %s' % token_type)
+
+    def e_prime(self):
+        """
+        E` -> + TE` | - TE` | epsilon
+        :return:
+        """
+        token_type = self.current_token.type_of
+        if token_type == tokenizer.TOKEN_OPERATOR_PLUS:
+            # generate opcode_add?
+            self.match(tokenizer.TOKEN_OPERATOR_PLUS)
+            self.t()
+            self.e_prime()
+        elif token_type == tokenizer.TOKEN_OPERATOR_MINUS:
+            # generate opcode_sub?
+            self.match(tokenizer.TOKEN_OPERATOR_MINUS)
+            self.t()
+            self.e_prime()
+        else:
+            return

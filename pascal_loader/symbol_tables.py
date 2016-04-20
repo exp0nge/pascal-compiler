@@ -20,19 +20,19 @@ class SymbolObject(object):
     attribute: static
     kind: var
     """
-    def __init__(self, name, type_of_object, kind, attribute=None, others=None):
+    def __init__(self, name, type_of_object, data_type, attribute=None, others=None):
         """
 
         :param name: str
         :param type_of_object: str
-        :param kind: str
+        :param data_type: str
         :param attribute: str
         :param others: list
         :return:
         """
         self.name = name
         self.type_of_object = type_of_object
-        self.kind = kind
+        self.kind = data_type
         self.attribute = attribute
         if others is None:
             self.others = others

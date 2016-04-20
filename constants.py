@@ -17,3 +17,7 @@ class OPCODE(object):
     CVR:
     """
     PUSHI, PUSH, POP, ADD, SUB, MULTIPLY, DIVIDE, DIV, CVR, GTR, DUP = range(11)
+
+
+class TYPE(object):
+    I, R, B, C = range(4)
