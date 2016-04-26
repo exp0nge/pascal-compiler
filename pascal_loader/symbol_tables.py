@@ -32,7 +32,7 @@ class SymbolObject(object):
         """
         self.name = name
         self.type_of_object = type_of_object
-        self.kind = data_type
+        self.data_type = data_type
         self.attribute = attribute
         if others is None:
             self.others = others
