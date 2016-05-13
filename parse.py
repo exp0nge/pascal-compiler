@@ -31,9 +31,12 @@ class Parser(object):
         """
         if self.current_token.type_of == token_type:
             print 'matched: ', token_type, self.current_token.value_of
-            self.current_token = self.token_list.next()
+            try:
+                self.current_token = self.token_list.next()
+            except StopIteration:
+                return
         else:
-            raise PascalError('Token mismatch with %s and %s (%i, %i)' % (str(token_type),
+            raise PascalError('Token mismatch, found: %s and current: %s (%i, %i)' % (str(token_type),
                                                                           str(self.current_token),
                                                                           self.current_token.row,
                                                                           self.current_token.column))
@@ -139,13 +142,24 @@ class Parser(object):
         """
         self.match('TK_BEGIN')
         self.statements()
+        self.match('TK_END')
+        self.match(tokenizer.TOKEN_DOT)
+        self.match(tokenizer.TOKEN_EOF)
+        self.generate_op_code(OPCODE.HALT)
 
     def statements(self):
-        type_of = self.current_token.type_of
-        if self.current_token.type_of == tokenizer.TOKEN_ID:
-            self.assignment_statement()
-        elif type_of == 'TK_WHILE':
-            pass
+        while self.current_token.type_of != 'TK_END':
+            type_of = self.current_token.type_of
+            if type_of == tokenizer.TOKEN_ID:
+                self.assignment_statement()
+            elif type_of == 'TK_WHILE':
+                self.while_statement()
+            elif type_of == 'TK_REPEAT':
+                self.repeat_statement()
+            elif type_of == tokenizer.TOKEN_SEMICOLON:
+                self.match(tokenizer.TOKEN_SEMICOLON)
+            else:
+                print 'not matched', type_of
 
     def find_name_or_error(self):
         symbol = self.find_name_in_symbol_table(self.current_token.value_of)
@@ -164,10 +178,8 @@ class Parser(object):
         self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
         rhs_type = self.e()
         if lhs_type == rhs_type:
+            self.generate_op_code(OPCODE.POP)
             self.generate_address(lhs_address)
-            print lhs_type, rhs_type
-            for b in self.byte_array:
-                print b
         else:
             raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
 

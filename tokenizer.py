@@ -9,7 +9,8 @@ from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT, COMMENT_TYPES
 TOKEN_NAME_PREFIX = 'TK_'
 TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
 TOKEN_ID = TOKEN_NAME_PREFIX + 'ID'
-TOKEN_EOF = TOKEN_NAME_PREFIX + 'DOT'
+TOKEN_DOT = TOKEN_NAME_PREFIX + 'DOT'
+TOKEN_EOF = TOKEN_NAME_PREFIX + 'EOF'
 TOKEN_SEMICOLON = TOKEN_NAME_PREFIX + 'SEMICOLON'
 TOKEN_COMMENT = TOKEN_NAME_PREFIX + 'COMMENT'
 TOKEN_OPERATOR = TOKEN_NAME_PREFIX + 'OPERATOR'
@@ -263,7 +264,7 @@ def get_token(pascal_file):
             column = 1
         elif symbol == DOT:
             index += 1
-            token_list.append(Token('.', TOKEN_EOF, row, column))
+            token_list.append(Token('.', TOKEN_DOT, row, column))
             column += 1
         elif symbol == SEMICOLON:
             index += 1
