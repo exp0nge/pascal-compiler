@@ -3,4 +3,5 @@ program assignments;
     var z : real;
 begin
     x := 20;
+    writeln(x);
 end.

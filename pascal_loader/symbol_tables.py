@@ -20,7 +20,7 @@ class SymbolObject(object):
     attribute: static
     kind: var
     """
-    def __init__(self, name, type_of_object, data_type, attribute=None, others=None):
+    def __init__(self, name, type_of_object, data_type, dp=None, attribute=None, others=None):
         """
 
         :param name: str
@@ -34,10 +34,15 @@ class SymbolObject(object):
         self.type_of_object = type_of_object
         self.data_type = data_type
         self.attribute = attribute
+        self.dp = dp
         if others is None:
             self.others = others
         else:
             self.others = []
 
     def __unicode__(self):
-        return '<%s, %s, %s>' % (self.name, self.type_of_object, self.kind)
+        return '<%s, %s, %i>' % (self.name, self.type_of_object, self.dp)
+
+    def __repr__(self):
+        return '<%s, %s, %i>' % (self.name, self.type_of_object, self.dp)
+

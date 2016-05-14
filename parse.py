@@ -2,7 +2,7 @@
 from pascal_loader import PascalError
 import pascal_loader.symbol_tables as symbol_tables
 import tokenizer
-from constants import OPCODE, TYPE, byte_packer
+from constants import OPCODE, TYPE, byte_packer, byte_unpacker
 
 
 class Parser(object):
@@ -10,6 +10,7 @@ class Parser(object):
         self.token_list = iter(token_list)
         self.current_token = None
         self.ip = 0
+        self.dp = 0
         self.symbol_table = []
         self.byte_array = bytearray()
 
@@ -115,7 +116,9 @@ class Parser(object):
         for variable in declarations:
             self.symbol_table.append(symbol_tables.SymbolObject(name=variable,
                                                                 type_of_object=symbol_tables.TYPE_VARIABLE,
-                                                                data_type=data_type))
+                                                                data_type=data_type,
+                                                                dp=self.dp))
+            self.dp += 1
         # check for more var
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
@@ -138,7 +141,9 @@ class Parser(object):
     def statements(self):
         while self.current_token.type_of != 'TK_END':
             type_of = self.current_token.type_of
-            if type_of == tokenizer.TOKEN_ID:
+            if type_of == 'TK_WRITELN':
+                self.write_line_statement()
+            elif type_of == tokenizer.TOKEN_ID:
                 self.assignment_statement()
             elif type_of == 'TK_WHILE':
                 self.while_statement()
@@ -159,7 +164,6 @@ class Parser(object):
             return symbol
 
     def assignment_statement(self):
-        lhs_address = self.ip
         symbol = self.find_name_or_error()
         lhs_type = symbol.data_type
         self.match(tokenizer.TOKEN_ID)
@@ -167,13 +171,14 @@ class Parser(object):
         rhs_type = self.e()
         if lhs_type == rhs_type:
             self.generate_op_code(OPCODE.POP)
-            self.generate_address(lhs_address)
+            self.generate_address(symbol.dp)
         else:
             raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
 
     def e(self):
         t1 = self.t()
-        while self.current_token.type_of == tokenizer.TOKEN_OPERATOR_PLUS or self.current_token.type_of == tokenizer.TOKEN_OPERATOR_MINUS:
+        while (self.current_token.type_of == tokenizer.TOKEN_OPERATOR_PLUS or
+                       self.current_token.type_of == tokenizer.TOKEN_OPERATOR_MINUS):
             op = self.current_token.type_of
             self.match(op)
             t2 = self.t()
@@ -194,6 +199,8 @@ class Parser(object):
         token_type = self.current_token.type_of
         if token_type == tokenizer.TOKEN_ID:
             symbol = self.find_name_or_error()
+            self.generate_op_code(OPCODE.PUSH)
+            self.generate_address(symbol.dp)
             self.match(tokenizer.TOKEN_ID)
             return symbol.data_type
         elif token_type == tokenizer.TOKEN_DATA_TYPE_INT:
@@ -204,3 +211,20 @@ class Parser(object):
 
     def emit(self, op, t1, t2):
         pass
+
+    def write_line_statement(self):
+        self.match('TK_WRITELN')
+        self.match(tokenizer.TOKEN_OPERATOR_LEFT_PAREN)
+        symbol = self.find_name_or_error()
+        t1 = self.e()
+        if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
+            self.generate_op_code(OPCODE.PRINT_I)
+            self.generate_address(symbol.dp)
+
+        type_of = self.current_token.type_of
+        if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
+            self.match(tokenizer.TOKEN_OPERATOR_COMMA)
+        elif type_of == tokenizer.TOKEN_OPERATOR_RIGHT_PAREN:
+            self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
+        else:
+            raise PascalError('Expected comma or right paren, found: %s' % self.current_token.type_of)
