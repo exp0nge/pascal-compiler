@@ -229,9 +229,9 @@ class Parser(object):
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_CHAR)
 
     def emit(self, op, t1, t2):
-        if op == OPCODE.ADD:
+        if op == tokenizer.TOKEN_OPERATOR_PLUS:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
-                self.generate_op_code(op)
+                self.generate_op_code(OPCODE.ADD)
                 return tokenizer.TOKEN_DATA_TYPE_INT
             elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.XCHG)
@@ -245,7 +245,7 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FADD)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
-        if op == OPCODE.SUB:
+        elif op == tokenizer.TOKEN_OPERATOR_MINUS:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.SUB)
                 return tokenizer.TOKEN_DATA_TYPE_INT
@@ -261,18 +261,18 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FSUB)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
-        if op == OPCODE.DIVIDE:
+        elif op == tokenizer.TOKEN_OPERATOR_DIVISION:
             if (t1 == tokenizer.TOKEN_DATA_TYPE_INT or t1 == tokenizer.TOKEN_DATA_TYPE_REAL) and (
                             t2 == tokenizer.TOKEN_DATA_TYPE_INT or t2 == tokenizer.TOKEN_DATA_TYPE_REAL):
-                self.generate_op_code(op)
+                self.generate_op_code(OPCODE.DIVIDE)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
-        if op == OPCODE.DIV:
+        elif op == 'TK_DIV':
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
-                self.generate_op_code(op)
+                self.generate_op_code(OPCODE.DIV)
                 return tokenizer.TOKEN_DATA_TYPE_INT
-        if op == OPCODE.MULTIPLY:
+        elif op == tokenizer.TOKEN_OPERATOR_MULTIPLICATION:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
-                self.generate_op_code(op)
+                self.generate_op_code(OPCODE.MULTIPLY)
                 return tokenizer.TOKEN_DATA_TYPE_INT
             elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.XCHG)
@@ -287,6 +287,10 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FMULTIPLY)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+        elif op == OPCODE.OR:
+            if t1 == tokenizer.TOKEN_DATA_TYPE_BOOL and t2 == tokenizer.TOKEN_DATA_TYPE_BOOL:
+                self.generate_op_code(OPCODE.OR)
+                return tokenizer.TOKEN_DATA_TYPE_BOOL
 
     def write_line_statement(self):
         self.match('TK_WRITELN')

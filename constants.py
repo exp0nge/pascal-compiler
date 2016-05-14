@@ -41,6 +41,7 @@ class OPCODE(object):
     FADD = 22
     FSUB = 23
     FMULTIPLY = 24
+    OR = 25
 
 
 class TYPE(object):
