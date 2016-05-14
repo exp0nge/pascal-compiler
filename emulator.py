@@ -44,6 +44,12 @@ class Emulator(object):
         elif op == OPCODE.NEW_LINE:
             self.print_new_line()
             self.start()
+        elif op == OPCODE.ADD:
+            self.add()
+            self.start()
+        elif op == OPCODE.SUB:
+            self.sub()
+            self.start()
         elif op == OPCODE.HALT:
             print 'End of program.'
             self.flush()
@@ -92,3 +98,13 @@ class Emulator(object):
     def print_new_line(self):
         self.ip += 1
         self.std_out.append('\n')
+
+    def sub(self):
+        self.ip += 1
+        right = self.stack.pop()
+        self.stack.append(self.stack.pop() - right)
+
+    def add(self):
+        self.ip += 1
+        add = self.stack.pop() + self.stack.pop()
+        self.stack.append(add)
