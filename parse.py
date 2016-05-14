@@ -2,7 +2,7 @@
 from pascal_loader import PascalError
 import pascal_loader.symbol_tables as symbol_tables
 import tokenizer
-from constants import OPCODE, TYPE
+from constants import OPCODE, TYPE, byte_packer
 
 
 class Parser(object):
@@ -37,22 +37,9 @@ class Parser(object):
                 return
         else:
             raise PascalError('Token mismatch, found: %s and current: %s (%i, %i)' % (str(token_type),
-                                                                          str(self.current_token),
-                                                                          self.current_token.row,
-                                                                          self.current_token.column))
-
-    def byte_packer(self, value_to_pack):
-        """
-        Expands value to four bytes to be stored in bytearray
-        :param value_to_pack: number
-        :return: tuple
-        """
-        value_to_pack = int(value_to_pack)
-        return (value_to_pack >> 24) & 0xFF, (value_to_pack >> 16) & 0xFF, (
-            value_to_pack >> 8) & 0xFF, value_to_pack & 0xFF
-
-    def byte_unpacker(self, byte_list):
-        return (byte_list[0] << 24) | (byte_list[1] << 16) | (byte_list[2] << 8) | (byte_list[3])
+                                                                                      str(self.current_token),
+                                                                                      self.current_token.row,
+                                                                                      self.current_token.column))
 
     def generate_op_code(self, op_code):
         """
@@ -69,7 +56,7 @@ class Parser(object):
         :param target: number
         :return:
         """
-        for byte in self.byte_packer(target):
+        for byte in byte_packer(target):
             self.byte_array.append(byte)
         self.ip += 4
 
@@ -87,6 +74,7 @@ class Parser(object):
             self.variable_declaration()
         else:
             self.begin()
+        return self.byte_array
 
     def variable_declaration(self):
         """

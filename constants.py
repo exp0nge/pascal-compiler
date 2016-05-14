@@ -39,3 +39,21 @@ class OPCODE(object):
 
 class TYPE(object):
     I, R, B, C, S = range(5)
+
+
+INSTRUCTION_LENGTH = 5
+
+
+def byte_unpacker(byte_list):
+    return (byte_list[0] << 24) | (byte_list[1] << 16) | (byte_list[2] << 8) | (byte_list[3])
+
+
+def byte_packer(value_to_pack):
+    """
+    Expands value to four bytes to be stored in bytearray
+    :param value_to_pack: number
+    :return: tuple
+    """
+    value_to_pack = int(value_to_pack)
+    return (value_to_pack >> 24) & 0xFF, (value_to_pack >> 16) & 0xFF, (
+        value_to_pack >> 8) & 0xFF, value_to_pack & 0xFF
