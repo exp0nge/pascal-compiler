@@ -36,6 +36,11 @@ class OPCODE(object):
     PRINT_B = 17
     PRINT_R = 18
     NEW_LINE = 19
+    NOT = 20
+    XCHG = 21
+    FADD = 22
+    FSUB = 23
+    FMULTIPLY = 24
 
 
 class TYPE(object):

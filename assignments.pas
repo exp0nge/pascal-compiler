@@ -5,5 +5,5 @@ begin
     x := 20;
     y := 55;
     writeln(x, x);
-    writeln(x, y);
+    writeln(y);
 end.

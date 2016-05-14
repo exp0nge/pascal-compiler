@@ -197,20 +197,96 @@ class Parser(object):
 
     def f(self):
         token_type = self.current_token.type_of
+
+        def generate_pushi_and_address(to_match):
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(self.current_token.value_of)
+            self.match(to_match)
+            return to_match
+
         if token_type == tokenizer.TOKEN_ID:
             symbol = self.find_name_or_error()
             self.generate_op_code(OPCODE.PUSH)
             self.generate_address(symbol.dp)
             self.match(tokenizer.TOKEN_ID)
             return symbol.data_type
+        elif token_type == 'TK_NOT':
+            self.generate_op_code(OPCODE.NOT)
+            self.match('TK_NOT')
+            return self.f()
+        elif token_type == tokenizer.TOKEN_OPERATOR_LEFT_PAREN:
+            self.match(tokenizer.TOKEN_OPERATOR_LEFT_PAREN)
+            t1 = self.e()
+            self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
+            return t1
         elif token_type == tokenizer.TOKEN_DATA_TYPE_INT:
-            self.generate_op_code(OPCODE.PUSHI)
-            self.generate_address(self.current_token.value_of)
-            self.match(tokenizer.TOKEN_DATA_TYPE_INT)
-            return tokenizer.TOKEN_DATA_TYPE_INT
+            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_INT)
+        elif token_type == tokenizer.TOKEN_DATA_TYPE_REAL:
+            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_REAL)
+        elif token_type == tokenizer.TOKEN_DATA_TYPE_BOOL:
+            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_BOOL)
+        elif token_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
+            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_CHAR)
 
     def emit(self, op, t1, t2):
-        pass
+        if op == OPCODE.ADD:
+            if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(op)
+                return tokenizer.TOKEN_DATA_TYPE_INT
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.FADD)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.FADD)
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.FADD)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+        if op == OPCODE.SUB:
+            if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.SUB)
+                return tokenizer.TOKEN_DATA_TYPE_INT
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.FSUB)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.FSUB)
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.FSUB)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+        if op == OPCODE.DIVIDE:
+            if (t1 == tokenizer.TOKEN_DATA_TYPE_INT or t1 == tokenizer.TOKEN_DATA_TYPE_REAL) and (
+                            t2 == tokenizer.TOKEN_DATA_TYPE_INT or t2 == tokenizer.TOKEN_DATA_TYPE_REAL):
+                self.generate_op_code(op)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+        if op == OPCODE.DIV:
+            if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(op)
+                return tokenizer.TOKEN_DATA_TYPE_INT
+        if op == OPCODE.MULTIPLY:
+            if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(op)
+                return tokenizer.TOKEN_DATA_TYPE_INT
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.FMULTIPLY)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.FMULTIPLY)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.FMULTIPLY)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
 
     def write_line_statement(self):
         self.match('TK_WRITELN')
