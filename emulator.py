@@ -16,8 +16,14 @@ class Emulator(object):
         self.data_array = {}
         self.stack = []
         self.byte_array = byte_array
+        self.std_out = []
         self.ip = 0
         self.data_pointer = 0
+
+    def flush(self):
+        print '----------------------------------'
+        for item in self.std_out:
+            print item,
 
     def start(self):
         print 'IP', self.ip
@@ -35,8 +41,12 @@ class Emulator(object):
         elif op == OPCODE.PRINT_I:
             self.print_i()
             self.start()
+        elif op == OPCODE.NEW_LINE:
+            self.print_new_line()
+            self.start()
         elif op == OPCODE.HALT:
             print 'End of program.'
+            self.flush()
             sys.exit()
         else:
             print 'Can\'t match', op
@@ -61,7 +71,7 @@ class Emulator(object):
         #     data.append(self.data_array[self.data_pointer])
         #     self.data_pointer += 1
         # return byte_unpacker(data)
-        return self.byte_array[self.immediate_value()]
+        return self.data_array[self.immediate_value()]
 
     def pop(self):
         self.ip += 1
@@ -73,9 +83,12 @@ class Emulator(object):
 
     def print_i(self):
         self.ip += 1
-        print 'stdout', self.immediate_data()
+        self.std_out.append(self.immediate_data())
 
     def push(self):
         self.ip += 1
         self.stack.append(self.immediate_data())
 
+    def print_new_line(self):
+        self.ip += 1
+        self.std_out.append('\n')

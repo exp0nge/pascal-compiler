@@ -215,16 +215,19 @@ class Parser(object):
     def write_line_statement(self):
         self.match('TK_WRITELN')
         self.match(tokenizer.TOKEN_OPERATOR_LEFT_PAREN)
-        symbol = self.find_name_or_error()
-        t1 = self.e()
-        if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
-            self.generate_op_code(OPCODE.PRINT_I)
-            self.generate_address(symbol.dp)
+        while True:
+            symbol = self.find_name_or_error()
+            t1 = self.e()
+            if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.PRINT_I)
+                self.generate_address(symbol.dp)
 
-        type_of = self.current_token.type_of
-        if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
-            self.match(tokenizer.TOKEN_OPERATOR_COMMA)
-        elif type_of == tokenizer.TOKEN_OPERATOR_RIGHT_PAREN:
-            self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
-        else:
-            raise PascalError('Expected comma or right paren, found: %s' % self.current_token.type_of)
+            type_of = self.current_token.type_of
+            if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
+                self.match(tokenizer.TOKEN_OPERATOR_COMMA)
+            elif type_of == tokenizer.TOKEN_OPERATOR_RIGHT_PAREN:
+                self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
+                self.generate_op_code(OPCODE.NEW_LINE)
+                return
+            else:
+                raise PascalError('Expected comma or right paren, found: %s' % self.current_token.type_of)

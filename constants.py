@@ -35,6 +35,7 @@ class OPCODE(object):
     PRINT_C = 16
     PRINT_B = 17
     PRINT_R = 18
+    NEW_LINE = 19
 
 
 class TYPE(object):

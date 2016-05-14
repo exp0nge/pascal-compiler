@@ -3,5 +3,7 @@ program assignments;
     var z : real;
 begin
     x := 20;
-    writeln(x);
+    y := 55;
+    writeln(x, x);
+    writeln(x, y);
 end.
