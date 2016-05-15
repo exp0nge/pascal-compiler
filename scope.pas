@@ -25,5 +25,4 @@ begin
 
    writeln('Winthin the program exlocal');
    writeln('value of a = ', a , ' b =  ',  b, ' and c = ', c);
-   display();
 end.

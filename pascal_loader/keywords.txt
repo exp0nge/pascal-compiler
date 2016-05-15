@@ -51,4 +51,6 @@ var
 while
 with
 xor
+false
+true
 writeln

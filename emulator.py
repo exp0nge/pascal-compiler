@@ -50,6 +50,33 @@ class Emulator(object):
         elif op == OPCODE.SUB:
             self.sub()
             self.start()
+        elif op == OPCODE.JFALSE:
+            self.jfalse()
+            self.start()
+        elif op == OPCODE.GTE:
+            self.gte()
+            self.start()
+        elif op == OPCODE.LTE:
+            self.lte()
+            self.start()
+        elif op == OPCODE.LES:
+            self.les()
+            self.start()
+        elif op == OPCODE.GTR:
+            self.gtr()
+            self.start()
+        elif op == OPCODE.EQL:
+            self.eql()
+            self.start()
+        elif op == OPCODE.NEQ:
+            self.neq()
+            self.start()
+        elif op == OPCODE.XCHG:
+            self.xchg()
+            self.start()
+        elif op == OPCODE.CVR:
+            self.cvr()
+            self.start()
         elif op == OPCODE.HALT:
             print 'End of program.'
             self.flush()
@@ -108,3 +135,46 @@ class Emulator(object):
         self.ip += 1
         add = self.stack.pop() + self.stack.pop()
         self.stack.append(add)
+
+    def jfalse(self):
+        self.ip += 1
+        if self.stack.pop():
+            self.immediate_value()
+        else:
+            self.ip = self.immediate_value()
+
+    def gte(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() <= self.stack.pop())
+
+    def gtr(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() > self.stack.pop())
+
+    def lte(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() >= self.stack.pop())
+
+    def les(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() < self.stack.pop())
+
+    def eql(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() == self.stack.pop())
+
+    def neq(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() != self.stack.pop())
+
+    def xchg(self):
+        self.ip += 1
+        print self.stack
+        top = self.stack.pop()
+        bottom = self.stack.pop()
+        self.stack.append(top)
+        self.stack.append(bottom)
+
+    def cvr(self):
+        self.ip += 1
+        self.stack.append(float(self.stack.pop()))

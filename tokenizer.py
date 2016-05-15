@@ -22,9 +22,13 @@ TOKEN_OPERATOR_MINUS = TOKEN_NAME_PREFIX + '-'
 TOKEN_OPERATOR_DIVISION = TOKEN_NAME_PREFIX + '/'
 TOKEN_OPERATOR_MULTIPLICATION = TOKEN_NAME_PREFIX + '*'
 TOKEN_OPERATOR_LEFT_CHEVRON = TOKEN_NAME_PREFIX + '<'
+TOKEN_OPERATOR_GTE = TOKEN_NAME_PREFIX + '>='
 TOKEN_OPERATOR_RIGHT_CHEVRON = TOKEN_NAME_PREFIX + '>'
+TOKEN_OPERATOR_LTE = TOKEN_NAME_PREFIX + '<='
 TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
 TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
+TOKEN_OPERATOR_EQUALITY = TOKEN_NAME_PREFIX + '='
+TOKEN_OPERATOR_NOT_EQUAL = TOKEN_NAME_PREFIX + '<>'
 
 TOKEN_DATA_TYPE_INT = TOKEN_NAME_PREFIX + 'INTEGER'
 TOKEN_DATA_TYPE_REAL = TOKEN_NAME_PREFIX + 'REAL'
@@ -80,10 +84,14 @@ operators_classifications = {
     '-': TOKEN_OPERATOR_MINUS,
     '/': TOKEN_OPERATOR_DIVISION,
     '<': TOKEN_OPERATOR_LEFT_CHEVRON,
+    '<=': TOKEN_OPERATOR_LTE,
     '>': TOKEN_OPERATOR_RIGHT_CHEVRON,
+    '>=': TOKEN_OPERATOR_GTE,
     ',': TOKEN_OPERATOR_COMMA,
     ':': TOKEN_OPERATOR_COLON,
-    '*': TOKEN_OPERATOR_MULTIPLICATION
+    '*': TOKEN_OPERATOR_MULTIPLICATION,
+    '=': TOKEN_OPERATOR_EQUALITY,
+    '<>': TOKEN_OPERATOR_NOT_EQUAL
 }
 
 
@@ -209,6 +217,12 @@ def case_operator(text_segment):
         return case_comment(text_segment[index:])
     elif text_segment[index] == ':' and text_segment[index + 1] == '=':
         # check for assignment
+        return text_segment[index] + text_segment[index + 1]
+    elif text_segment[index] == '<' and (text_segment[index + 1] == '=' or text_segment[index + 1] == '>'):
+        # check for LTE
+        return text_segment[index] + text_segment[index + 1]
+    elif text_segment[index] == '>' and text_segment[index + 1] == '=':
+        # check for GTE
         return text_segment[index] + text_segment[index + 1]
     elif text_segment[index] == '/' and text_segment[index + 1] == '/':
         # got a inline comment

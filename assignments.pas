@@ -1,7 +1,6 @@
 program assignments;
     var x, y : integer;
     var aashnaIsLate : integer;
-    var z : real;
 begin
     x := 20 + 20;
     y := 55;

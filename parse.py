@@ -2,7 +2,7 @@
 from pascal_loader import PascalError
 import pascal_loader.symbol_tables as symbol_tables
 import tokenizer
-from constants import OPCODE, TYPE, byte_packer, byte_unpacker
+from constants import OPCODE, CONDITIONALS, byte_packer, byte_unpacker
 
 
 class Parser(object):
@@ -151,8 +151,11 @@ class Parser(object):
                 self.repeat_statement()
             elif type_of == tokenizer.TOKEN_SEMICOLON:
                 self.match(tokenizer.TOKEN_SEMICOLON)
+            elif type_of == tokenizer.TOKEN_COMMENT:
+                self.match(tokenizer.TOKEN_COMMENT)
             else:
-                print 'not matched', type_of
+                print 'Statements can\'t match ', type_of
+                return
 
     def find_name_or_error(self):
         symbol = self.find_name_in_symbol_table(self.current_token.value_of)
@@ -228,7 +231,34 @@ class Parser(object):
         elif token_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_CHAR)
 
+    def condition(self):
+        t1 = self.e()
+        value_of = self.current_token.value_of
+        if CONDITIONALS.get(value_of) is None:
+            raise PascalError("Expected conditional, got: %s" % value_of)
+        else:
+            type_of = self.current_token.type_of
+            self.match(type_of)
+            t2 = self.t()
+            t1 = self.emit(type_of, t1, t2)
+        return t1
+
     def emit(self, op, t1, t2):
+        def boolean(op, t1, t2):
+            if t1 == t2:
+                self.generate_op_code(op)
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(op)
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(op)
+            else:
+                return None
+            return tokenizer.TOKEN_DATA_TYPE_BOOL
+
         if op == tokenizer.TOKEN_OPERATOR_PLUS:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.ADD)
@@ -287,10 +317,24 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FMULTIPLY)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
-        elif op == OPCODE.OR:
+        elif op == 'TK_OR':
             if t1 == tokenizer.TOKEN_DATA_TYPE_BOOL and t2 == tokenizer.TOKEN_DATA_TYPE_BOOL:
                 self.generate_op_code(OPCODE.OR)
                 return tokenizer.TOKEN_DATA_TYPE_BOOL
+        elif op == tokenizer.TOKEN_OPERATOR_GTE:
+            return boolean(OPCODE.GTE, t1, t2)
+        elif op == tokenizer.TOKEN_OPERATOR_LTE:
+            return boolean(OPCODE.LTE, t1, t2)
+        elif op == tokenizer.TOKEN_OPERATOR_EQUALITY:
+            return boolean(OPCODE.EQL, t1, t2)
+        elif op == tokenizer.TOKEN_OPERATOR_NOT_EQUAL:
+            return boolean(OPCODE.NEQ, t1, t2)
+        elif op == tokenizer.TOKEN_OPERATOR_LEFT_CHEVRON:
+            return boolean(OPCODE.GTR, t1, t2)
+        elif op == tokenizer.TOKEN_OPERATOR_RIGHT_CHEVRON:
+            return boolean(OPCODE.LES, t1, t2)
+        else:
+            raise PascalError('Emit failed to match %s' % op)
 
     def write_line_statement(self):
         self.match('TK_WRITELN')
@@ -311,3 +355,12 @@ class Parser(object):
                 return
             else:
                 raise PascalError('Expected comma or right paren, found: %s' % self.current_token.type_of)
+
+    def repeat_statement(self):
+        self.match('TK_REPEAT')
+        target = self.ip
+        self.statements()
+        self.match('TK_UNTIL')
+        self.condition()
+        self.generate_op_code(OPCODE.JFALSE)
+        self.generate_address(target)

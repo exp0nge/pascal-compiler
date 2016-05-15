@@ -25,7 +25,7 @@ class OPCODE(object):
     DIVIDE = 6
     DIV = 7
     CVR = 8
-    GTR = 9
+    GTE = 9
     DUP = 10
     JMP = 11
     JFALSE = 12
@@ -42,6 +42,11 @@ class OPCODE(object):
     FSUB = 23
     FMULTIPLY = 24
     OR = 25
+    LTE = 26
+    EQL = 27
+    NEQ = 28
+    GTR = 29
+    LES = 30
 
 
 class TYPE(object):
@@ -64,3 +69,12 @@ def byte_packer(value_to_pack):
     value_to_pack = int(value_to_pack)
     return (value_to_pack >> 24) & 0xFF, (value_to_pack >> 16) & 0xFF, (
         value_to_pack >> 8) & 0xFF, value_to_pack & 0xFF
+
+CONDITIONALS = {
+    '<': True,
+    '<>': True,
+    '<=': True,
+    '>': True,
+    '>=': True,
+    '=': True,
+}
