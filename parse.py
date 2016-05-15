@@ -139,6 +139,13 @@ class Parser(object):
         self.generate_op_code(OPCODE.HALT)
 
     def statements(self):
+        """
+        E -> T | E + T | E - T
+        T -> F | T * F | T/F
+        T -> id | lit | +F | -F | €
+        F -> ( E ) | +F | -F | not F | lit | id //lit: return type based on the constant, id: type from symbol table
+        :return:
+        """
         while self.current_token.type_of != 'TK_END':
             type_of = self.current_token.type_of
             if type_of == 'TK_WRITELN':
@@ -246,6 +253,50 @@ class Parser(object):
         return t1
 
     def emit(self, op, t1, t2):
+        """
+        Based on lookup tables.
+        +	I	R	B	C
+            /I	/R	X	X
+
+        -	I	    R	    B	C
+            Neg/I	Fneg/R	X	X
+
+        Not	I	            R	B	    C
+            Bitwisenot/I	X	Not/B	X
+
+        +	I	        R	                        B	C
+        I	Add/I	    Xchg, cvr, xchg, fadd/R	    X	X
+        R	CVR fadd/R	Add/R	X	X
+        B	X	        X	                        X	X
+        C	X	        X	                        X	X
+
+        /	I	R
+        I	/R	/R
+        R	/R	/R
+
+        Div	I
+        I	/I
+
+        Or	I	        B
+        I	X or or/I	X
+        B	X	        Or/B
+
+        =	I	    R	B	C
+        I	Eql/B		X	X
+        R		Eql/B	X	X
+        B	X	X	Eql/B	X
+        C	X	X	X	Eql/B
+
+        Abs	I	R	B	C
+                    X	X
+
+
+        :param op: OPCODE
+        :param t1: data_type
+        :param t2: data_type
+        :return: data_type or None
+        """
+
         def boolean(op, t1, t2):
             if t1 == t2:
                 self.generate_op_code(op)
@@ -364,6 +415,11 @@ class Parser(object):
                 raise PascalError('Expected comma or right paren, found: %s' % self.current_token.type_of)
 
     def repeat_statement(self):
+        """
+        <repeat-stat> -> repeat <statements>
+        Until <cond>
+        :return:
+        """
         self.match('TK_REPEAT')
         target = self.ip
         self.statements()
@@ -373,6 +429,10 @@ class Parser(object):
         self.generate_address(target)
 
     def while_statement(self):
+        """
+        While <cond> do <stat>;
+        :return:
+        """
         self.match('TK_WHILE')
         target = self.ip
         self.condition()
@@ -392,6 +452,11 @@ class Parser(object):
         self.ip = save
 
     def if_statement(self):
+        """
+        If <cond> then <stat>
+        If <cond> then <stat> else <stat>
+        :return:
+        """
         self.match('TK_IF')
         self.condition()
         self.match('TK_THEN')
