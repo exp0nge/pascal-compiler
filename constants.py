@@ -47,6 +47,7 @@ class OPCODE(object):
     NEQ = 28
     GTR = 29
     LES = 30
+    PRINT_ILIT = 31
 
 
 class TYPE(object):

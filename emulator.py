@@ -45,6 +45,9 @@ class Emulator(object):
         elif op == OPCODE.PRINT_I:
             self.print_i()
             self.start()
+        elif op == OPCODE.PRINT_ILIT:
+            self.print_ilit()
+            self.start()
         elif op == OPCODE.NEW_LINE:
             self.print_new_line()
             self.start()
@@ -192,3 +195,8 @@ class Emulator(object):
     def jmp(self):
         self.ip += 1
         self.ip = self.immediate_value()
+
+    def print_ilit(self):
+        self.ip += 1
+        v = self.immediate_value()
+        self.std_out.append(v)

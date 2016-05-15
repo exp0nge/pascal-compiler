@@ -15,6 +15,7 @@ DOT = 7
 COMMENT = 8
 COMMENT_TYPES = ['//', '{*', '(*']
 SEMICOLON = 9
+NEGATIVE = 10
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 OPERATORS = '+-/,()<>:='
 
@@ -23,7 +24,8 @@ symbol_map = {' ': SPACE,
               '\'': QUOTE,
               '.': DOT,
               '{': COMMENT,
-              ';': SEMICOLON}
+              ';': SEMICOLON,
+              '-': NEGATIVE}
 
 for character in ALPHABET:
     symbol_map[character] = LETTER

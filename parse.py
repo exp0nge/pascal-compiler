@@ -149,6 +149,8 @@ class Parser(object):
                 self.while_statement()
             elif type_of == 'TK_REPEAT':
                 self.repeat_statement()
+            elif type_of == 'TK_IF':
+                self.if_statement()
             elif type_of == tokenizer.TOKEN_SEMICOLON:
                 self.match(tokenizer.TOKEN_SEMICOLON)
             elif type_of == tokenizer.TOKEN_COMMENT:
@@ -340,11 +342,16 @@ class Parser(object):
         self.match('TK_WRITELN')
         self.match(tokenizer.TOKEN_OPERATOR_LEFT_PAREN)
         while True:
-            symbol = self.find_name_or_error()
-            t1 = self.e()
-            if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
-                self.generate_op_code(OPCODE.PRINT_I)
-                self.generate_address(symbol.dp)
+            if self.current_token.type_of == tokenizer.TOKEN_ID:
+                symbol = self.find_name_or_error()
+                t1 = self.e()
+                if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
+                    self.generate_op_code(OPCODE.PRINT_I)
+                    self.generate_address(symbol.dp)
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.PRINT_ILIT)
+                self.generate_address(int(self.current_token.value_of))
+                self.match(tokenizer.TOKEN_DATA_TYPE_INT)
 
             type_of = self.current_token.type_of
             if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
@@ -379,6 +386,30 @@ class Parser(object):
         self.match(tokenizer.TOKEN_SEMICOLON)
         self.generate_op_code(OPCODE.JMP)
         self.generate_address(target)
+        save = self.ip
+        self.ip = hole
+        self.generate_address(save)
+        self.ip = save
+
+    def if_statement(self):
+        self.match('TK_IF')
+        self.condition()
+        self.match('TK_THEN')
+        self.generate_op_code(OPCODE.JFALSE)
+        hole = self.ip
+        self.generate_address(0)
+        self.statements()
+        if self.current_token.type_of == 'TK_ELSE':
+            self.generate_op_code(OPCODE.JMP)
+            hole_2 = self.ip
+            self.generate_address(0)
+            save = self.ip
+            self.ip = hole
+            self.generate_address(save)
+            self.ip = save
+            hole = hole_2
+            self.match('TK_ELSE')
+            self.statements()
         save = self.ip
         self.ip = hole
         self.generate_address(save)

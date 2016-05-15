@@ -180,6 +180,9 @@ def case_digit(text_segment):
             suffix += character
             digit_seen = True
             index += 1
+        elif character_value == '-':
+            suffix += character
+            index += 1
         elif character_value == DOT:
             if digit_seen:
                 # TODO: handle 3..2, 3 tokens
@@ -263,6 +266,12 @@ def get_token(pascal_file):
             if word[:2] in COMMENT_TYPES:
                 # checks for cases such as '//' or '(*'
                 token_list.append(Token(word, TOKEN_COMMENT, row, column))
+            elif word == '-' and pascal_file.contents[index:index + 1].isdigit():
+                # a negative number
+                number_part = case_digit(pascal_file.contents[index:])
+                word = word + number_part
+                index += len(number_part)
+                token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
             else:
                 token_list.append(Token(word, operators_classifications[word], row, column))
             column += len(word)
