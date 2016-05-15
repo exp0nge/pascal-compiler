@@ -10,9 +10,10 @@ from emulator import Emulator
 
 if __name__ == '__main__':
     pretty_printer = pprint.PrettyPrinter()
-    # tokens = get_token(PascalFile(input_file_location='assignments.pas', output_location=''))
     # tokens = get_token(PascalFile(input_file_location='simple_assignment.pas', output_location=''))
-    tokens = get_token(PascalFile(input_file_location='controls.pas', output_location=''))
+    # tokens = get_token(PascalFile(input_file_location='assignments.pas', output_location=''))
+    # tokens = get_token(PascalFile(input_file_location='control_repeat.pas', output_location=''))
+    tokens = get_token(PascalFile(input_file_location='control_while.pas', output_location=''))
     pretty_printer.pprint(tokens)
     print '----------------------------------'
     parser = Parser(token_list=tokens)

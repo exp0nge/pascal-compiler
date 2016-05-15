@@ -3,6 +3,8 @@
 Emulator for pascal compiled code
 """
 
+from pascal_loader import PascalError
+
 from constants import OPCODE, byte_unpacker, byte_packer
 import sys
 
@@ -21,6 +23,8 @@ class Emulator(object):
         self.data_pointer = 0
 
     def flush(self):
+        print '----------------------------------'
+        print 'Flushing standard out'
         print '----------------------------------'
         for item in self.std_out:
             print item,
@@ -77,13 +81,16 @@ class Emulator(object):
         elif op == OPCODE.CVR:
             self.cvr()
             self.start()
+        elif op == OPCODE.JMP:
+            self.jmp()
+            self.start()
         elif op == OPCODE.HALT:
-            print 'End of program.'
+            print 'Finished simulating program.'
             self.flush()
             sys.exit()
         else:
-            print 'Can\'t match', op
             print 'Stack', self.stack
+            raise PascalError('Can\'t match %i' % op)
 
     def pushi(self):
         self.ip += 1
@@ -137,11 +144,14 @@ class Emulator(object):
         self.stack.append(add)
 
     def jfalse(self):
+        print self.stack, self.data_array
         self.ip += 1
         if self.stack.pop():
             self.immediate_value()
         else:
-            self.ip = self.immediate_value()
+            imm = self.immediate_value()
+            print 'jumping!', imm
+            self.ip = imm
 
     def gte(self):
         self.ip += 1
@@ -178,3 +188,7 @@ class Emulator(object):
     def cvr(self):
         self.ip += 1
         self.stack.append(float(self.stack.pop()))
+
+    def jmp(self):
+        self.ip += 1
+        self.ip = self.immediate_value()

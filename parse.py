@@ -12,7 +12,7 @@ class Parser(object):
         self.ip = 0
         self.dp = 0
         self.symbol_table = []
-        self.byte_array = bytearray()
+        self.byte_array = bytearray(500)
 
     def find_name_in_symbol_table(self, name):
         """
@@ -37,10 +37,10 @@ class Parser(object):
             except StopIteration:
                 return
         else:
-            raise PascalError('Token mismatch, found: %s and current: %s (%i, %i)' % (str(token_type),
-                                                                                      str(self.current_token),
-                                                                                      self.current_token.row,
-                                                                                      self.current_token.column))
+            raise PascalError('Token mismatch, got: %s and current: %s (%i, %i)' % (str(token_type),
+                                                                                    str(self.current_token),
+                                                                                    self.current_token.row,
+                                                                                    self.current_token.column))
 
     def generate_op_code(self, op_code):
         """
@@ -48,7 +48,7 @@ class Parser(object):
         :param op_code: int
         :return:
         """
-        self.byte_array.append(op_code)
+        self.byte_array[self.ip] = op_code
         self.ip += 1
 
     def generate_address(self, target):
@@ -58,8 +58,8 @@ class Parser(object):
         :return:
         """
         for byte in byte_packer(target):
-            self.byte_array.append(byte)
-        self.ip += 4
+            self.byte_array[self.ip] = byte
+            self.ip += 1
 
     def parse(self):
         """
@@ -364,3 +364,22 @@ class Parser(object):
         self.condition()
         self.generate_op_code(OPCODE.JFALSE)
         self.generate_address(target)
+
+    def while_statement(self):
+        self.match('TK_WHILE')
+        target = self.ip
+        self.condition()
+        self.match('TK_DO')
+        self.generate_op_code(OPCODE.JFALSE)
+        hole = self.ip
+        self.generate_address(0)
+        self.match('TK_BEGIN')
+        self.statements()
+        self.match('TK_END')
+        self.match(tokenizer.TOKEN_SEMICOLON)
+        self.generate_op_code(OPCODE.JMP)
+        self.generate_address(target)
+        save = self.ip
+        self.ip = hole
+        self.generate_address(save)
+        self.ip = save
