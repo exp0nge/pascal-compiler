@@ -158,6 +158,8 @@ class Parser(object):
                 self.repeat_statement()
             elif type_of == 'TK_IF':
                 self.if_statement()
+            elif type_of == 'TK_FOR':
+                self.for_statement()
             elif type_of == tokenizer.TOKEN_SEMICOLON:
                 self.match(tokenizer.TOKEN_SEMICOLON)
             elif type_of == tokenizer.TOKEN_COMMENT:
@@ -479,3 +481,42 @@ class Parser(object):
         self.ip = hole
         self.generate_address(save)
         self.ip = save
+
+    def for_statement(self):
+        self.match('TK_FOR')
+        value_of = self.current_token.value_of
+        self.assignment_statement()
+        target = self.ip
+        symbol = self.find_name_in_symbol_table(value_of)
+
+        self.match('TK_TO')
+        self.generate_op_code(OPCODE.PUSH)
+        self.generate_address(symbol.dp)
+        self.generate_op_code(OPCODE.PUSHI)
+        self.generate_address(self.current_token.value_of)
+        self.generate_op_code(OPCODE.LTE)
+        self.match(tokenizer.TOKEN_DATA_TYPE_INT)
+        self.match('TK_DO')
+        self.generate_op_code(OPCODE.JFALSE)
+        hole = self.ip
+        self.generate_address(0)
+
+        self.match('TK_BEGIN')
+        self.statements()
+        self.match('TK_END')
+        self.match(tokenizer.TOKEN_SEMICOLON)
+
+        self.generate_op_code(OPCODE.PUSH)
+        self.generate_address(symbol.dp)
+        self.generate_op_code(OPCODE.PUSHI)
+        self.generate_address(1)
+        self.generate_op_code(OPCODE.ADD)
+        self.generate_op_code(OPCODE.POP)
+        self.generate_address(symbol.dp)
+        self.generate_op_code(OPCODE.JMP)
+        self.generate_address(target)
+        save = self.ip
+        self.ip = hole
+        self.generate_address(save)
+        self.ip = save
+
