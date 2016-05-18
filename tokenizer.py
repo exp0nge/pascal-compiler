@@ -29,6 +29,7 @@ TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
 TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR_EQUALITY = TOKEN_NAME_PREFIX + '='
 TOKEN_OPERATOR_NOT_EQUAL = TOKEN_NAME_PREFIX + '<>'
+TOKEN_CHARACTER = TOKEN_NAME_PREFIX + 'CHARACTER'
 
 TOKEN_DATA_TYPE_INT = TOKEN_NAME_PREFIX + 'INTEGER'
 TOKEN_DATA_TYPE_REAL = TOKEN_NAME_PREFIX + 'REAL'
@@ -266,19 +267,22 @@ def get_token(pascal_file):
             if word[:2] in COMMENT_TYPES:
                 # checks for cases such as '//' or '(*'
                 token_list.append(Token(word, TOKEN_COMMENT, row, column))
-            elif word == '-' and pascal_file.contents[index:index + 1].isdigit():
-                # a negative number
-                number_part = case_digit(pascal_file.contents[index:])
-                word = word + number_part
-                index += len(number_part)
-                token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
+            # elif word == '-' and pascal_file.contents[index:index + 1].isdigit():
+            #     # a negative number
+            #     number_part = case_digit(pascal_file.contents[index:])
+            #     word = word + number_part
+            #     index += len(number_part)
+            #     token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
             else:
                 token_list.append(Token(word, operators_classifications[word], row, column))
             column += len(word)
         elif symbol == QUOTE:
             word = case_quote(pascal_file.contents[index:], row, column)
             index += len(word)
-            token_list.append(Token(word, TOKEN_STRING_LIT, row, column))
+            if len(word) == 3:
+                token_list.append(Token(str(word.replace("'", '')), TOKEN_CHARACTER, row, column))
+            else:
+                token_list.append(Token(word, TOKEN_STRING_LIT, row, column))
             column += len(word)
         elif symbol == EOL:
             index += 1
@@ -300,6 +304,6 @@ def get_token(pascal_file):
             column += len(word)
         else:
             index += 1
-            raise PascalError('Unknown symbol: %s (ln %i, col %i)' % (symbol, row, column))
+            raise PascalError('Unknown symbol: %s (ln %i, col %i)' % (pascal_file.contents[index], row, column))
     token_list.append(Token('EOF', TOKEN_EOF, row, column))
     return token_list

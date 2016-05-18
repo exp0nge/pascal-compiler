@@ -48,6 +48,8 @@ class OPCODE(object):
     GTR = 29
     LES = 30
     PRINT_ILIT = 31
+    POP_CHAR = 32
+    PUSH_CHAR = 33
 
 
 class TYPE(object):

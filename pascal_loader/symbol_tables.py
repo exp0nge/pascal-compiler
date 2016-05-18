@@ -41,8 +41,8 @@ class SymbolObject(object):
             self.others = []
 
     def __unicode__(self):
-        return '<%s, %s, %i>' % (self.name, self.type_of_object, self.dp)
+        return '<%s, %s, %i, %s>' % (self.name, self.type_of_object, self.dp, self.data_type)
 
     def __repr__(self):
-        return '<%s, %s, %i>' % (self.name, self.type_of_object, self.dp)
+        return '<%s, %s, %i, %s>' % (self.name, self.type_of_object, self.dp, self.data_type)
 

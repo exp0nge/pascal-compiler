@@ -183,7 +183,10 @@ class Parser(object):
         self.match(tokenizer.TOKEN_ID)
         self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
         rhs_type = self.e()
-        if lhs_type == rhs_type:
+        if rhs_type == tokenizer.TOKEN_CHARACTER:
+            self.generate_op_code(OPCODE.POP_CHAR)
+            self.generate_address(symbol.dp)
+        elif lhs_type == rhs_type:
             self.generate_op_code(OPCODE.POP)
             self.generate_address(symbol.dp)
         else:
@@ -241,6 +244,13 @@ class Parser(object):
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_BOOL)
         elif token_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_CHAR)
+        elif token_type == tokenizer.TOKEN_CHARACTER:
+            self.generate_op_code(OPCODE.PUSH_CHAR)
+            self.generate_address(ord(self.current_token.value_of))
+            self.match(tokenizer.TOKEN_CHARACTER)
+            return tokenizer.TOKEN_CHARACTER
+        else:
+            raise PascalError('f() does not support %s, %s' % (self.current_token.value_of, token_type))
 
     def condition(self):
         t1 = self.e()
@@ -327,6 +337,7 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(OPCODE.FADD)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FADD)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
@@ -343,12 +354,22 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(OPCODE.FSUB)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FSUB)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
         elif op == tokenizer.TOKEN_OPERATOR_DIVISION:
-            if (t1 == tokenizer.TOKEN_DATA_TYPE_INT or t1 == tokenizer.TOKEN_DATA_TYPE_REAL) and (
-                            t2 == tokenizer.TOKEN_DATA_TYPE_INT or t2 == tokenizer.TOKEN_DATA_TYPE_REAL):
+            if t1 == t2:
+                self.generate_op_code(OPCODE.DIVIDE)
+                return t1
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(OPCODE.XCHG)
+                self.generate_op_code(OPCODE.DIVIDE)
+                return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(OPCODE.DIVIDE)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
         elif op == 'TK_DIV':
@@ -405,6 +426,10 @@ class Parser(object):
                 self.generate_op_code(OPCODE.PRINT_ILIT)
                 self.generate_address(int(self.current_token.value_of))
                 self.match(tokenizer.TOKEN_DATA_TYPE_INT)
+            elif self.current_token.type_of == tokenizer.TOKEN_CHARACTER:
+                self.generate_op_code(OPCODE.PRINT_C)
+                self.generate_address(self.current_token.value_of)
+                self.match(tokenizer.TOKEN_CHARACTER)
 
             type_of = self.current_token.type_of
             if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
@@ -520,3 +545,9 @@ class Parser(object):
         self.generate_address(save)
         self.ip = save
 
+    def case_statement(self):
+        self.match('TK_CASE')
+        e1 = self.e()
+        if e1 == tokenizer.TOKEN_DATA_TYPE_REAL:
+            raise PascalError('Real type not allowed for case: ' + e1)
+        self.match()

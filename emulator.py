@@ -87,13 +87,25 @@ class Emulator(object):
         elif op == OPCODE.JMP:
             self.jmp()
             self.start()
+        elif op == OPCODE.POP_CHAR:
+            self.pop_char()
+            self.start()
+        elif op == OPCODE.MULTIPLY:
+            self.multiply()
+            self.start()
         elif op == OPCODE.HALT:
             print 'Finished simulating program.'
             self.flush()
             sys.exit()
+        elif op == OPCODE.PUSH_CHAR:
+            self.push_char()
+            self.start()
+        elif op == OPCODE.DIVIDE:
+            self.divide()
+            self.start()
         else:
             print 'Stack', self.stack
-            raise PascalError('Can\'t match %i' % op)
+            raise PascalError('Emulator lacks support for opcode %i' % op)
 
     def pushi(self):
         self.ip += 1
@@ -200,3 +212,24 @@ class Emulator(object):
         self.ip += 1
         v = self.immediate_value()
         self.std_out.append(v)
+
+    def pop_char(self):
+        self.ip += 1
+        popped_value = self.stack.pop()
+        self.data_pointer = self.immediate_value()
+        self.data_array[self.data_pointer] = chr(popped_value)
+        self.data_pointer += 1
+        return popped_value
+
+    def push_char(self):
+        self.ip += 1
+        self.stack.append(self.immediate_value())
+
+    def multiply(self):
+        self.ip += 1
+        self.stack.append(self.stack.pop() * self.stack.pop())
+
+    def divide(self):
+        self.ip += 1
+        denom = self.stack.pop()
+        self.stack.append(self.stack.pop() / float(denom))

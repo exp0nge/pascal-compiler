@@ -17,7 +17,7 @@ COMMENT_TYPES = ['//', '{*', '(*']
 SEMICOLON = 9
 NEGATIVE = 10
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-OPERATORS = '+-/,()<>:='
+OPERATORS = '+-/,()<>:=*'
 
 symbol_map = {' ': SPACE,
               '\n': EOL,
