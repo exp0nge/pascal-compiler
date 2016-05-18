@@ -422,14 +422,21 @@ class Parser(object):
                 if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
                     self.generate_op_code(OPCODE.PRINT_I)
                     self.generate_address(symbol.dp)
+                elif t1 == tokenizer.TOKEN_DATA_TYPE_CHAR:
+                    self.generate_op_code(OPCODE.PRINT_C)
+                    self.generate_address(symbol.dp)
+                else:
+                    raise PascalError('writeln does not support ' + symbol)
             elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.PRINT_ILIT)
                 self.generate_address(int(self.current_token.value_of))
                 self.match(tokenizer.TOKEN_DATA_TYPE_INT)
-            elif self.current_token.type_of == tokenizer.TOKEN_CHARACTER:
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
                 self.generate_op_code(OPCODE.PRINT_C)
                 self.generate_address(self.current_token.value_of)
                 self.match(tokenizer.TOKEN_CHARACTER)
+            else:
+                raise PascalError('writeln does not support %s', self.current_token.value_of)
 
             type_of = self.current_token.type_of
             if type_of == tokenizer.TOKEN_OPERATOR_COMMA:

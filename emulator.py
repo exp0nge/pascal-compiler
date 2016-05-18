@@ -48,6 +48,9 @@ class Emulator(object):
         elif op == OPCODE.PRINT_ILIT:
             self.print_ilit()
             self.start()
+        elif op == OPCODE.PRINT_C:
+            self.print_c()
+            self.start()
         elif op == OPCODE.NEW_LINE:
             self.print_new_line()
             self.start()
@@ -233,3 +236,7 @@ class Emulator(object):
         self.ip += 1
         denom = self.stack.pop()
         self.stack.append(self.stack.pop() / float(denom))
+
+    def print_c(self):
+        self.ip += 1
+        self.std_out.append(self.data_array[self.immediate_value()])
