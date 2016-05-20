@@ -2,7 +2,7 @@ program assignments;
 var
     x, y : integer;
 var
-    aashnaIsLate : integer;
+    hello : integer;
 var
     aChar : char;
 begin
@@ -11,7 +11,7 @@ begin
     aChar := 'a';
     writeln(x, x);
     writeln(y);
-    aashnaIsLate := 5 + 2 * 10 / 2 * 2 + 1 - 6;
-    writeln(aashnaIsLate);
+    hello := 5 + 2 * 10 / 2 * 2 + 1 - 6;
+    writeln(hello);
     writeln(aChar);
 end.
