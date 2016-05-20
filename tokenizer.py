@@ -29,9 +29,13 @@ TOKEN_OPERATOR_COLON = TOKEN_NAME_PREFIX + 'COLON'
 TOKEN_OPERATOR_COMMA = TOKEN_NAME_PREFIX + 'COMMA'
 TOKEN_OPERATOR_EQUALITY = TOKEN_NAME_PREFIX + '='
 TOKEN_OPERATOR_NOT_EQUAL = TOKEN_NAME_PREFIX + '<>'
+TOKEN_OPERATOR_LEFT_BRACKET = TOKEN_NAME_PREFIX + '['
+TOKEN_OPERATOR_RIGHT_BRACKET = TOKEN_NAME_PREFIX + ']'
+
 TOKEN_CHARACTER = TOKEN_NAME_PREFIX + 'CHARACTER'
 
 TOKEN_DATA_TYPE_INT = TOKEN_NAME_PREFIX + 'INTEGER'
+TOKEN_DATA_TYPE_RANGE = TOKEN_NAME_PREFIX + 'RANGE'
 TOKEN_DATA_TYPE_REAL = TOKEN_NAME_PREFIX + 'REAL'
 TOKEN_DATA_TYPE_CHAR = TOKEN_NAME_PREFIX + 'CHAR'
 TOKEN_DATA_TYPE_BOOL = TOKEN_NAME_PREFIX + 'BOOL'
@@ -92,7 +96,9 @@ operators_classifications = {
     ':': TOKEN_OPERATOR_COLON,
     '*': TOKEN_OPERATOR_MULTIPLICATION,
     '=': TOKEN_OPERATOR_EQUALITY,
-    '<>': TOKEN_OPERATOR_NOT_EQUAL
+    '<>': TOKEN_OPERATOR_NOT_EQUAL,
+    '[': TOKEN_OPERATOR_LEFT_BRACKET,
+    ']': TOKEN_OPERATOR_RIGHT_BRACKET
 }
 
 
@@ -186,7 +192,6 @@ def case_digit(text_segment):
             index += 1
         elif character_value == DOT:
             if digit_seen:
-                # TODO: handle 3..2, 3 tokens
                 if suffix.__contains__('.') and symbol_map.get(text_segment[index + 1]) is DOT:
                     # Got a range number .. number
                     suffix += character
@@ -256,7 +261,10 @@ def get_token(pascal_file):
         elif symbol == DIGIT:
             word = case_digit(pascal_file.contents[index:])
             index += len(word)
-            token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
+            if word.count('.') == 2:
+                token_list.append(Token(word, TOKEN_DATA_TYPE_RANGE, row, column))
+            else:
+                token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
             column += len(word)
         elif symbol == SPACE:
             column += 1
