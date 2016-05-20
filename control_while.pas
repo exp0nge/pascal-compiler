@@ -5,6 +5,7 @@ begin
     writeln(x);
     while x < 10 do
         begin
+            writeln(x);
             x := x + 3;
         end;
     writeln(x);

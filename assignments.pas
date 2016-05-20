@@ -7,7 +7,7 @@ var
     aChar : char;
 begin
     x := 20 + 20;
-    y := 55;
+    y := (5 + 5) * 2;
     aChar := 'a';
     writeln(x, x);
     writeln(y);

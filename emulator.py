@@ -220,13 +220,13 @@ class Emulator(object):
         self.ip += 1
         popped_value = self.stack.pop()
         self.data_pointer = self.immediate_value()
-        self.data_array[self.data_pointer] = chr(popped_value)
+        self.data_array[self.data_pointer] = popped_value
         self.data_pointer += 1
         return popped_value
 
     def push_char(self):
         self.ip += 1
-        self.stack.append(self.immediate_value())
+        self.stack.append(chr(self.immediate_value()))
 
     def multiply(self):
         self.ip += 1

@@ -160,12 +160,14 @@ class Parser(object):
                 self.if_statement()
             elif type_of == 'TK_FOR':
                 self.for_statement()
+            elif type_of == 'TK_CASE':
+                self.case_statement()
             elif type_of == tokenizer.TOKEN_SEMICOLON:
                 self.match(tokenizer.TOKEN_SEMICOLON)
             elif type_of == tokenizer.TOKEN_COMMENT:
                 self.match(tokenizer.TOKEN_COMMENT)
             else:
-                print 'Statements can\'t match ', type_of
+                print 'Parser: statements() can\'t match ', self.current_token
                 return
 
     def find_name_or_error(self):
@@ -319,6 +321,9 @@ class Parser(object):
                 self.generate_op_code(op)
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.CVR)
+                self.generate_op_code(op)
+            elif t1 == 'TK_CHAR' and t2 == tokenizer.TOKEN_CHARACTER:
+
                 self.generate_op_code(op)
             else:
                 return None
@@ -553,8 +558,58 @@ class Parser(object):
         self.ip = save
 
     def case_statement(self):
+        """
+        Case E of
+            [<tags> : <statement>] +
+                else <statement>
+            end
+
+        <tags>	<single tag>	    10:
+                <range>	            3..9:
+                <list>	            3,5,6
+                <list of ranges>	1..20, 30..40:
+        :return:
+        """
         self.match('TK_CASE')
+        self.match(tokenizer.TOKEN_OPERATOR_LEFT_PAREN)
+        checker = self.current_token
         e1 = self.e()
         if e1 == tokenizer.TOKEN_DATA_TYPE_REAL:
             raise PascalError('Real type not allowed for case: ' + e1)
-        self.match()
+        self.match(tokenizer.TOKEN_OPERATOR_RIGHT_PAREN)
+        self.match('TK_OF')
+        hole_list = []
+        while (self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT or
+                       self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR or
+                       self.current_token.type_of == tokenizer.TOKEN_CHARACTER or
+                       self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_BOOL):
+            e2 = self.e()
+            self.emit(tokenizer.TOKEN_OPERATOR_EQUALITY, e1, e2)
+            self.match(tokenizer.TOKEN_OPERATOR_COLON)
+
+            self.generate_op_code(OPCODE.JFALSE)
+            hole = self.ip
+            self.generate_address(0)
+            self.statements()
+
+            self.generate_op_code(OPCODE.JMP)
+            hole_list.append(self.ip)
+            self.generate_address(0)
+
+            save = self.ip
+            self.ip = hole
+            self.generate_address(save)
+            self.ip = save
+            if self.current_token.type_of != 'TK_END':
+                symbol = self.find_name_in_symbol_table(checker.value_of)
+                if symbol is not None:
+                    self.generate_op_code(OPCODE.PUSH)
+                    self.generate_address(symbol.dp)
+
+        self.match('TK_END')
+        self.match(tokenizer.TOKEN_SEMICOLON)
+        save = self.ip
+        for hole in hole_list:
+            self.ip = hole
+            self.generate_address(save)
+        self.ip = save
