@@ -57,8 +57,14 @@ class Emulator(object):
         elif op == OPCODE.ADD:
             self.add()
             self.start()
+        elif op == OPCODE.FADD:
+            self.f_add()
+            self.start()
         elif op == OPCODE.SUB:
             self.sub()
+            self.start()
+        elif op == OPCODE.FSUB:
+            self.f_sub()
             self.start()
         elif op == OPCODE.JFALSE:
             self.jfalse()
@@ -95,6 +101,9 @@ class Emulator(object):
             self.start()
         elif op == OPCODE.MULTIPLY:
             self.multiply()
+            self.start()
+        elif op == OPCODE.FMULTIPLY:
+            self.f_multiply()
             self.start()
         elif op == OPCODE.HALT:
             print 'Finished simulating program.'
@@ -162,7 +171,6 @@ class Emulator(object):
         self.stack.append(add)
 
     def jfalse(self):
-        print self.stack, self.data_array
         self.ip += 1
         if self.stack.pop():
             self.immediate_value()
@@ -197,7 +205,6 @@ class Emulator(object):
 
     def xchg(self):
         self.ip += 1
-        print self.stack
         top = self.stack.pop()
         bottom = self.stack.pop()
         self.stack.append(top)
@@ -240,3 +247,16 @@ class Emulator(object):
     def print_c(self):
         self.ip += 1
         self.std_out.append(self.data_array[self.immediate_value()])
+
+    def f_multiply(self):
+        self.ip += 1
+        self.stack.append(float(self.stack.pop()) * float(self.stack.pop()))
+
+    def f_add(self):
+        self.ip += 1
+        self.stack.append(float(self.stack.pop()) + float(self.stack.pop()))
+
+    def f_sub(self):
+        self.ip += 1
+        right = float(self.stack.pop())
+        self.stack.append(float(self.stack.pop()) - right)
