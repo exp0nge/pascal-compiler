@@ -264,6 +264,8 @@ def get_token(pascal_file):
             index += len(word)
             if word.count('.') == 2:
                 token_list.append(Token(word, TOKEN_DATA_TYPE_RANGE, row, column))
+            elif word.count('.') == 1:
+                token_list.append(Token(word, TOKEN_DATA_TYPE_REAL, row, column))
             else:
                 token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
             column += len(word)

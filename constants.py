@@ -3,6 +3,8 @@
 http://stackoverflow.com/questions/36932/how-can-i-represent-an-enum-in-python
 """
 
+import struct
+
 
 class OPCODE(object):
     """
@@ -61,6 +63,21 @@ class TYPE(object):
 INSTRUCTION_LENGTH = 5
 
 
+def float_to_bits(floaty):
+    """
+    http://stackoverflow.com/questions/14431170/get-the-bits-of-a-float-in-python
+    :param floaty:
+    :return:
+    """
+    s = struct.pack('>f', floaty)
+    return struct.unpack('>l', s)[0]
+
+
+def bits_to_float(bits):
+    s = struct.pack('>l', bits)
+    return struct.unpack('>f', s)[0]
+
+
 def byte_unpacker(byte_list):
     return (byte_list[0] << 24) | (byte_list[1] << 16) | (byte_list[2] << 8) | (byte_list[3])
 
@@ -71,9 +88,14 @@ def byte_packer(value_to_pack):
     :param value_to_pack: number
     :return: tuple
     """
-    value_to_pack = int(value_to_pack)
+    try:
+        value_to_pack = int(value_to_pack)
+    except ValueError:
+        value_to_pack = float_to_bits(float(value_to_pack))
+
     return (value_to_pack >> 24) & 0xFF, (value_to_pack >> 16) & 0xFF, (
         value_to_pack >> 8) & 0xFF, value_to_pack & 0xFF
+
 
 CONDITIONALS = {
     '<': True,

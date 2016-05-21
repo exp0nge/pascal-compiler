@@ -5,7 +5,7 @@ Emulator for pascal compiled code
 
 from pascal_loader import PascalError
 
-from constants import OPCODE, byte_unpacker, byte_packer
+from constants import OPCODE, byte_unpacker, bits_to_float
 import sys
 
 
@@ -123,6 +123,9 @@ class Emulator(object):
             self.start()
         elif op == OPCODE.PRINT_B:
             self.print_b()
+            self.start()
+        elif op == OPCODE.PRINT_R:
+            self.print_r()
             self.start()
         else:
             print 'Stack', self.stack
@@ -280,3 +283,7 @@ class Emulator(object):
         self.ip += 1
         boolean = self.immediate_data()
         self.std_out.append('true' if boolean == 1 else 'false')
+
+    def print_r(self):
+        self.ip += 1
+        self.std_out.append("{0:.2f}".format(bits_to_float(self.immediate_data())))
