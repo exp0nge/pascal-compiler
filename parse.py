@@ -307,6 +307,11 @@ class Parser(object):
             self.generate_address(self.current_token.value_of)
             self.match(tokenizer.TOKEN_DATA_TYPE_REAL)
             return tokenizer.TOKEN_DATA_TYPE_REAL
+        # elif token_type == tokenizer.TOKEN_REAL_LIT:
+        #     self.generate_op_code(OPCODE.PUSHI)
+        #     self.generate_address(self.current_token.value_of)
+        #     self.match(tokenizer.TOKEN_REAL_LIT)
+        #     return tokenizer.TOKEN_REAL_LIT
         elif token_type == tokenizer.TOKEN_DATA_TYPE_BOOL:
             self.generate_op_code(OPCODE.PUSHI)
             self.generate_address(self.current_token.value_of)
@@ -512,23 +517,23 @@ class Parser(object):
         while True:
             if self.current_token.type_of == tokenizer.TOKEN_ID:
                 symbol = self.find_name_or_error()
-                t1 = self.e()
-                if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
+                expression = self.e()
+                if expression == tokenizer.TOKEN_DATA_TYPE_INT:
                     if hasattr(symbol, 'assignment_type'):
                         self.generate_op_code(OPCODE.RETRIEVE)
                     else:
                         self.generate_op_code(OPCODE.PRINT_I)
                         self.generate_address(symbol.dp)
-                elif t1 == tokenizer.TOKEN_DATA_TYPE_CHAR:
+                elif expression == tokenizer.TOKEN_DATA_TYPE_CHAR:
                     self.generate_op_code(OPCODE.PRINT_C)
                     self.generate_address(symbol.dp)
-                elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                elif expression == tokenizer.TOKEN_DATA_TYPE_REAL:
                     self.generate_op_code(OPCODE.PRINT_R)
                     self.generate_address(symbol.dp)
-                elif t1 == tokenizer.TOKEN_DATA_TYPE_BOOL:
+                elif expression == tokenizer.TOKEN_DATA_TYPE_BOOL:
                     self.generate_op_code(OPCODE.PRINT_B)
                     self.generate_address(symbol.dp)
-                elif t1 == tokenizer.TOKEN_DATA_TYPE_ARRAY:
+                elif expression == tokenizer.TOKEN_DATA_TYPE_ARRAY:
                     self.generate_op_code(OPCODE.RETRIEVE)
                 else:
                     raise PascalError('writeln does not support ' + str(symbol))

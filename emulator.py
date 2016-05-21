@@ -243,7 +243,7 @@ class Emulator(object):
 
     def divide(self):
         self.ip += 1
-        denom = self.stack.pop()
+        denom = bits_to_float(self.stack.pop())
         self.stack.append(self.stack.pop() / float(denom))
 
     def print_c(self):
@@ -283,4 +283,5 @@ class Emulator(object):
 
     def print_r(self):
         self.ip += 1
-        self.std_out.append('{0:.2f}'.format(bits_to_float(self.immediate_data())))
+        # self.std_out.append('{0:.2f}'.format(bits_to_float(self.immediate_value())))
+        self.std_out.append(self.immediate_data())

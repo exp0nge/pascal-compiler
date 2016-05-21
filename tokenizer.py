@@ -7,7 +7,8 @@ from pascal_loader import symbol_map, LETTER, RESERVED, SPACE, DIGIT, OPERATOR, 
 from pascal_loader import PascalError, DOT, SEMICOLON, COMMENT, COMMENT_TYPES
 
 TOKEN_NAME_PREFIX = 'TK_'
-TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STRLIT'
+TOKEN_STRING_LIT = TOKEN_NAME_PREFIX + 'STR_LIT'
+TOKEN_REAL_LIT = TOKEN_NAME_PREFIX + 'REAL_LIT'
 TOKEN_ID = TOKEN_NAME_PREFIX + 'ID'
 TOKEN_DOT = TOKEN_NAME_PREFIX + 'DOT'
 TOKEN_EOF = TOKEN_NAME_PREFIX + 'EOF'
@@ -265,6 +266,7 @@ def get_token(pascal_file):
             if word.count('.') == 2:
                 token_list.append(Token(word, TOKEN_DATA_TYPE_RANGE, row, column))
             elif word.count('.') == 1:
+                # token_list.append(Token(word, TOKEN_REAL_LIT, row, column))
                 token_list.append(Token(word, TOKEN_DATA_TYPE_REAL, row, column))
             else:
                 token_list.append(Token(word, TOKEN_DATA_TYPE_INT, row, column))
