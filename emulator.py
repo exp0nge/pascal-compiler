@@ -30,9 +30,7 @@ class Emulator(object):
             print item,
 
     def start(self):
-        print 'IP', self.ip
         op = self.byte_array[self.ip]
-        print 'Matching', op
         if op == OPCODE.PUSHI:
             self.pushi()
             self.start()
@@ -181,7 +179,6 @@ class Emulator(object):
             self.immediate_value()
         else:
             imm = self.immediate_value()
-            print 'jumping!', imm
             self.ip = imm
 
     def gte(self):
@@ -276,8 +273,8 @@ class Emulator(object):
     def retrieve(self):
         self.ip += 1
         self.data_pointer = self.stack.pop()
-        self.stack.append(self.data_pointer)
-        self.std_out.append(self.data_array[self.data_pointer])
+        self.stack.append(self.data_array[self.data_pointer])
+        # self.std_out.append(self.data_array[self.data_pointer])
 
     def print_b(self):
         self.ip += 1
@@ -286,4 +283,4 @@ class Emulator(object):
 
     def print_r(self):
         self.ip += 1
-        self.std_out.append("{0:.2f}".format(bits_to_float(self.immediate_data())))
+        self.std_out.append('{0:.2f}'.format(bits_to_float(self.immediate_data())))

@@ -237,17 +237,17 @@ class Parser(object):
         self.match(tokenizer.TOKEN_ID)
         if self.current_token.type_of == tokenizer.TOKEN_OPERATOR_LEFT_BRACKET:
             self.array_assignment(symbol)
+            return
+        self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
+        rhs_type = self.e()
+        if rhs_type == tokenizer.TOKEN_CHARACTER:
+            self.generate_op_code(OPCODE.POP_CHAR)
+            self.generate_address(symbol.dp)
+        elif lhs_type == rhs_type:
+            self.generate_op_code(OPCODE.POP)
+            self.generate_address(symbol.dp)
         else:
-            self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
-            rhs_type = self.e()
-            if rhs_type == tokenizer.TOKEN_CHARACTER:
-                self.generate_op_code(OPCODE.POP_CHAR)
-                self.generate_address(symbol.dp)
-            elif lhs_type == rhs_type:
-                self.generate_op_code(OPCODE.POP)
-                self.generate_address(symbol.dp)
-            else:
-                raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
+            raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
 
     def e(self):
         t1 = self.t()
@@ -284,12 +284,13 @@ class Parser(object):
                 self.generate_op_code(OPCODE.PUSH)
                 self.generate_address(symbol.dp)
                 self.match(tokenizer.TOKEN_ID)
+                return symbol.data_type
             elif symbol.type_of_object == symbol_tables.TYPE_ARRAY:
                 self.match(tokenizer.TOKEN_ID)
                 self.access_array(symbol)
                 self.generate_op_code(OPCODE.RETRIEVE)
-            return symbol.data_type
-
+                # return tokenizer.TOKEN_DATA_TYPE_ARRAY
+                return symbol.assignment_type
         elif token_type == 'TK_NOT':
             self.generate_op_code(OPCODE.NOT)
             self.match('TK_NOT')
@@ -400,7 +401,6 @@ class Parser(object):
                 self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(op)
             elif t1 == 'TK_CHAR' and t2 == tokenizer.TOKEN_CHARACTER:
-
                 self.generate_op_code(op)
             else:
                 return None
@@ -423,6 +423,8 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FADD)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+            else:
+                raise PascalError('Unable to match operation + with types: ' + t1 + ' and ' + t2)
         elif op == tokenizer.TOKEN_OPERATOR_MINUS:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.SUB)
@@ -440,6 +442,8 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FSUB)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+            else:
+                raise PascalError('Unable to match operation - with types: ' + t1 + ' and ' + t2)
         elif op == tokenizer.TOKEN_OPERATOR_DIVISION:
             if t1 == t2:
                 self.generate_op_code(OPCODE.DIVIDE)
@@ -454,10 +458,14 @@ class Parser(object):
                 self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(OPCODE.DIVIDE)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+            else:
+                raise PascalError('Unable to match operation / with types: ' + t1 + ' and ' + t2)
         elif op == 'TK_DIV':
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.DIV)
                 return tokenizer.TOKEN_DATA_TYPE_INT
+            else:
+                raise PascalError('Unable to match operation div with types: ' + t1 + ' and ' + t2)
         elif op == tokenizer.TOKEN_OPERATOR_MULTIPLICATION:
             if t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.MULTIPLY)
@@ -475,10 +483,14 @@ class Parser(object):
             elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.FMULTIPLY)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+            else:
+                raise PascalError('Unable to match operation * with types: ' + t1 + ' and ' + t2)
         elif op == 'TK_OR':
             if t1 == tokenizer.TOKEN_DATA_TYPE_BOOL and t2 == tokenizer.TOKEN_DATA_TYPE_BOOL:
                 self.generate_op_code(OPCODE.OR)
                 return tokenizer.TOKEN_DATA_TYPE_BOOL
+            else:
+                raise PascalError('Unable to match operation or with types: ' + t1 + ' and ' + t2)
         elif op == tokenizer.TOKEN_OPERATOR_GTE:
             return boolean(OPCODE.GTE, t1, t2)
         elif op == tokenizer.TOKEN_OPERATOR_LTE:
@@ -502,8 +514,11 @@ class Parser(object):
                 symbol = self.find_name_or_error()
                 t1 = self.e()
                 if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
-                    self.generate_op_code(OPCODE.PRINT_I)
-                    self.generate_address(symbol.dp)
+                    if hasattr(symbol, 'assignment_type'):
+                        self.generate_op_code(OPCODE.RETRIEVE)
+                    else:
+                        self.generate_op_code(OPCODE.PRINT_I)
+                        self.generate_address(symbol.dp)
                 elif t1 == tokenizer.TOKEN_DATA_TYPE_CHAR:
                     self.generate_op_code(OPCODE.PRINT_C)
                     self.generate_address(symbol.dp)
@@ -514,9 +529,7 @@ class Parser(object):
                     self.generate_op_code(OPCODE.PRINT_B)
                     self.generate_address(symbol.dp)
                 elif t1 == tokenizer.TOKEN_DATA_TYPE_ARRAY:
-                    self.access_array(symbol)
                     self.generate_op_code(OPCODE.RETRIEVE)
-
                 else:
                     raise PascalError('writeln does not support ' + str(symbol))
             if self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
@@ -721,11 +734,13 @@ class Parser(object):
             # check for float/int
             if left.__contains__('.'):
                 if right.__contains__('.'):
+                    left, right = float(left), float(right)
                     payload['data_type'] = tokenizer.TOKEN_DATA_TYPE_REAL
                 else:
                     raise PascalError('Array range mismatch, %s %s' % (left, right))
             else:
                 # assume int
+                left, right = int(left), int(right)
                 payload['access_type'] = tokenizer.TOKEN_DATA_TYPE_INT
         payload['left'], payload['right'], payload['token'] = left, right, token
         return payload
