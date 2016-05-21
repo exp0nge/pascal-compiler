@@ -113,6 +113,9 @@ class Emulator(object):
         elif op == OPCODE.DIVIDE:
             self.divide()
             self.start()
+        elif op == OPCODE.FDIVIDE:
+            self.f_divide()
+            self.start()
         elif op == OPCODE.DUMP:
             self.dump()
             self.start()
@@ -124,6 +127,9 @@ class Emulator(object):
             self.start()
         elif op == OPCODE.PRINT_R:
             self.print_r()
+            self.start()
+        elif op == OPCODE.POP_REAL_LIT:
+            self.pop_real_lit()
             self.start()
         else:
             print 'Stack', self.stack
@@ -243,6 +249,11 @@ class Emulator(object):
 
     def divide(self):
         self.ip += 1
+        denom = self.stack.pop()
+        self.stack.append(self.stack.pop() / float(denom))
+
+    def f_divide(self):
+        self.ip += 1
         denom = bits_to_float(self.stack.pop())
         self.stack.append(self.stack.pop() / float(denom))
 
@@ -283,5 +294,10 @@ class Emulator(object):
 
     def print_r(self):
         self.ip += 1
-        # self.std_out.append('{0:.2f}'.format(bits_to_float(self.immediate_value())))
         self.std_out.append(self.immediate_data())
+
+    def pop_real_lit(self):
+        self.ip += 1
+        popped_value = self.stack.pop()
+        self.data_array[self.immediate_value()] = '{0:.2f}'.format(bits_to_float(popped_value))
+        self.data_pointer += 1

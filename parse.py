@@ -243,6 +243,9 @@ class Parser(object):
         if rhs_type == tokenizer.TOKEN_CHARACTER:
             self.generate_op_code(OPCODE.POP_CHAR)
             self.generate_address(symbol.dp)
+        elif lhs_type == tokenizer.TOKEN_DATA_TYPE_REAL and rhs_type == tokenizer.TOKEN_REAL_LIT:
+            self.generate_op_code(OPCODE.POP_REAL_LIT)
+            self.generate_address(symbol.dp)
         elif lhs_type == rhs_type:
             self.generate_op_code(OPCODE.POP)
             self.generate_address(symbol.dp)
@@ -307,11 +310,11 @@ class Parser(object):
             self.generate_address(self.current_token.value_of)
             self.match(tokenizer.TOKEN_DATA_TYPE_REAL)
             return tokenizer.TOKEN_DATA_TYPE_REAL
-        # elif token_type == tokenizer.TOKEN_REAL_LIT:
-        #     self.generate_op_code(OPCODE.PUSHI)
-        #     self.generate_address(self.current_token.value_of)
-        #     self.match(tokenizer.TOKEN_REAL_LIT)
-        #     return tokenizer.TOKEN_REAL_LIT
+        elif token_type == tokenizer.TOKEN_REAL_LIT:
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(self.current_token.value_of)
+            self.match(tokenizer.TOKEN_REAL_LIT)
+            return tokenizer.TOKEN_REAL_LIT
         elif token_type == tokenizer.TOKEN_DATA_TYPE_BOOL:
             self.generate_op_code(OPCODE.PUSHI)
             self.generate_address(self.current_token.value_of)
@@ -451,7 +454,10 @@ class Parser(object):
                 raise PascalError('Unable to match operation - with types: ' + t1 + ' and ' + t2)
         elif op == tokenizer.TOKEN_OPERATOR_DIVISION:
             if t1 == t2:
-                self.generate_op_code(OPCODE.DIVIDE)
+                if t1 == tokenizer.TOKEN_DATA_TYPE_INT:
+                    self.generate_op_code(OPCODE.DIVIDE)
+                elif t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                    self.generate_op_code(OPCODE.FDIVIDE)
                 return t1
             elif t1 == tokenizer.TOKEN_DATA_TYPE_INT and t2 == tokenizer.TOKEN_DATA_TYPE_REAL:
                 self.generate_op_code(OPCODE.XCHG)
@@ -463,6 +469,9 @@ class Parser(object):
                 self.generate_op_code(OPCODE.CVR)
                 self.generate_op_code(OPCODE.DIVIDE)
                 return tokenizer.TOKEN_DATA_TYPE_REAL
+            elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL and t2 == tokenizer.TOKEN_REAL_LIT:
+                self.generate_op_code(OPCODE.FDIVIDE)
+                return t1
             else:
                 raise PascalError('Unable to match operation / with types: ' + t1 + ' and ' + t2)
         elif op == 'TK_DIV':

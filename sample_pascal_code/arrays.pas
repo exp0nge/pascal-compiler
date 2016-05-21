@@ -17,12 +17,12 @@ begin
         end;
         avg := avg / 11.0;
         writeln(avg);
- {*   for i := 0 to 10 do
+  {*  for i := 0 to 10 do
         begin
             temp := a[i];
             a[i] := a[x];
             a[x] := temp;
             x := x - 1;
         end;
-        *}
+ *}
 end.

@@ -54,6 +54,8 @@ class OPCODE(object):
     PUSH_CHAR = 33
     DUMP = 34
     RETRIEVE = 35
+    FDIVIDE = 36
+    POP_REAL_LIT = 37
 
 
 class TYPE(object):
