@@ -1,13 +1,16 @@
 program arrays;
 
-var a : array[0..10] of integer;
-var i : integer;
+var i, x : integer;
+var avg : real;
 
 begin
-
+    x := 55;
+    avg := 5.0;
     // Example from http://www.tutorialspoint.com/pascal/pascal_arrays.htm
     for i := 0 to 10 do
         begin
-            writeln(a[i]);
+//            a[i] := i;
+//            avg := avg + a[i];
+            writeln(avg);
         end;
 end.

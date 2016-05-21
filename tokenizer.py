@@ -36,9 +36,10 @@ TOKEN_CHARACTER = TOKEN_NAME_PREFIX + 'CHARACTER'
 
 TOKEN_DATA_TYPE_INT = TOKEN_NAME_PREFIX + 'INTEGER'
 TOKEN_DATA_TYPE_RANGE = TOKEN_NAME_PREFIX + 'RANGE'
+TOKEN_DATA_TYPE_ARRAY = TOKEN_NAME_PREFIX + 'ARRAY'
 TOKEN_DATA_TYPE_REAL = TOKEN_NAME_PREFIX + 'REAL'
 TOKEN_DATA_TYPE_CHAR = TOKEN_NAME_PREFIX + 'CHAR'
-TOKEN_DATA_TYPE_BOOL = TOKEN_NAME_PREFIX + 'BOOL'
+TOKEN_DATA_TYPE_BOOL = TOKEN_NAME_PREFIX + 'BOOLEAN'
 
 TOKEN_RESERVED = TOKEN_NAME_PREFIX + 'RESERVED'
 
@@ -311,7 +312,6 @@ def get_token(pascal_file):
             token_list.append(Token(word, TOKEN_COMMENT, row, column))
             column += len(word)
         else:
-            index += 1
             raise PascalError('Unknown symbol: %s (ln %i, col %i)' % (pascal_file.contents[index], row, column))
     token_list.append(Token('EOF', TOKEN_EOF, row, column))
     return token_list

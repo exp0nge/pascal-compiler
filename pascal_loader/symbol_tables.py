@@ -9,6 +9,7 @@ TYPE_PROCEDURE = 'pro'
 TYPE_EXPRESSIONS = 'expr'  # a = 1.0;
 TYPE_STATEMENTS = 'stat'  # int pow(int n, int m)
 TYPE_PARAMETER = 'par'
+TYPE_ARRAY = 'arr'
 
 
 class SymbolObject(object):
@@ -33,7 +34,9 @@ class SymbolObject(object):
         self.name = name
         self.type_of_object = type_of_object
         self.data_type = data_type
-        self.attribute = attribute
+        if attribute is not None:
+            for attr, value in attribute.iteritems():
+                self.__setattr__(attr, value)
         self.dp = dp
         if others is None:
             self.others = others

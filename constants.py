@@ -50,6 +50,8 @@ class OPCODE(object):
     PRINT_ILIT = 31
     POP_CHAR = 32
     PUSH_CHAR = 33
+    DUMP = 34
+    RETRIEVE = 35
 
 
 class TYPE(object):

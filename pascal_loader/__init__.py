@@ -20,6 +20,8 @@ ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 OPERATORS = '+-/,()<>:=*[]'
 
 symbol_map = {' ': SPACE,
+              '\t': SPACE,
+              '\r': SPACE,
               '\n': EOL,
               '\'': QUOTE,
               '.': DOT,

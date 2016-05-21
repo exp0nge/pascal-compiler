@@ -30,6 +30,11 @@ class Parser(object):
         :param token_type: str
         :return:
         """
+        # if self.current_token.type_of == tokenizer.TOKEN_COMMENT:
+        #     try:
+        #         self.current_token = self.token_list.next()
+        #     except StopIteration:
+        #         return
         if self.current_token.type_of == token_type:
             print 'matched: ', token_type, self.current_token.value_of
             try:
@@ -70,7 +75,7 @@ class Parser(object):
         self.match('TK_PROGRAM')
         self.match(tokenizer.TOKEN_ID)
         self.match(tokenizer.TOKEN_SEMICOLON)
-        # either we see var or begin
+        # either we see var or begin or a comment
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
         else:
@@ -109,16 +114,63 @@ class Parser(object):
         elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_BOOL:
             self.match(tokenizer.TOKEN_DATA_TYPE_BOOL)
             data_type = tokenizer.TOKEN_DATA_TYPE_BOOL
+        elif self.current_token.type_of == 'TK_ARRAY':
+            self.match('TK_ARRAY')
+            data_type = tokenizer.TOKEN_DATA_TYPE_ARRAY
         else:
-            raise PascalError('%s data type is invalid' % self.current_token.value_of)
-        self.match(tokenizer.TOKEN_SEMICOLON)
-        # store in symbol table
-        for variable in declarations:
-            self.symbol_table.append(symbol_tables.SymbolObject(name=variable,
-                                                                type_of_object=symbol_tables.TYPE_VARIABLE,
-                                                                data_type=data_type,
-                                                                dp=self.dp))
-            self.dp += 1
+            raise PascalError('%s data type is invalid (%i, %i)' % (self.current_token.type_of,
+                                                                    self.current_token.row,
+                                                                    self.current_token.column))
+        if data_type == tokenizer.TOKEN_DATA_TYPE_ARRAY:
+            # handle array declaration
+            self.match(tokenizer.TOKEN_OPERATOR_LEFT_BRACKET)
+            extractor = self.extract_ranges(self.current_token)
+            self.match(tokenizer.TOKEN_DATA_TYPE_RANGE)
+            self.match(tokenizer.TOKEN_OPERATOR_RIGHT_BRACKET)
+            self.match('TK_OF')
+            if self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
+                self.match(tokenizer.TOKEN_DATA_TYPE_INT)
+                assignment_type = tokenizer.TOKEN_DATA_TYPE_INT
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_REAL:
+                self.match(tokenizer.TOKEN_DATA_TYPE_REAL)
+                assignment_type = tokenizer.TOKEN_DATA_TYPE_REAL
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
+                self.match(tokenizer.TOKEN_DATA_TYPE_CHAR)
+                assignment_type = tokenizer.TOKEN_DATA_TYPE_CHAR
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_BOOL:
+                self.match(tokenizer.TOKEN_DATA_TYPE_BOOL)
+                assignment_type = tokenizer.TOKEN_DATA_TYPE_BOOL
+            else:
+                raise PascalError('Array of type <%s> is not valid.' % self.current_token.type_of)
+            self.match(tokenizer.TOKEN_SEMICOLON)
+            attributes = {
+                'left': extractor['left'],
+                'right': extractor['right'],
+                'access_type': extractor['access_type'],
+                'assignment_type': assignment_type
+            }
+            if extractor['access_type'] == tokenizer.TOKEN_DATA_TYPE_INT:
+                for variable in declarations:
+                    self.symbol_table.append(symbol_tables.SymbolObject(name=variable,
+                                                                        type_of_object=symbol_tables.TYPE_ARRAY,
+                                                                        data_type=tokenizer.TOKEN_DATA_TYPE_ARRAY,
+                                                                        dp=self.dp,
+                                                                        attribute=attributes))
+                    self.dp += 4 * int(extractor['right']) - int(extractor['left'])
+            elif extractor['access_type'] == tokenizer.TOKEN_DATA_TYPE_CHAR:
+                pass
+            else:
+                raise PascalError('Array access type of %s is not allowed.' % extractor['access_type'])
+
+        else:
+            self.match(tokenizer.TOKEN_SEMICOLON)
+            # store in symbol table
+            for variable in declarations:
+                self.symbol_table.append(symbol_tables.SymbolObject(name=variable,
+                                                                    type_of_object=symbol_tables.TYPE_VARIABLE,
+                                                                    data_type=data_type,
+                                                                    dp=self.dp))
+                self.dp += 1
         # check for more var
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
@@ -183,16 +235,19 @@ class Parser(object):
         symbol = self.find_name_or_error()
         lhs_type = symbol.data_type
         self.match(tokenizer.TOKEN_ID)
-        self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
-        rhs_type = self.e()
-        if rhs_type == tokenizer.TOKEN_CHARACTER:
-            self.generate_op_code(OPCODE.POP_CHAR)
-            self.generate_address(symbol.dp)
-        elif lhs_type == rhs_type:
-            self.generate_op_code(OPCODE.POP)
-            self.generate_address(symbol.dp)
+        if self.current_token.type_of == tokenizer.TOKEN_OPERATOR_LEFT_BRACKET:
+            self.array_assignment(symbol)
         else:
-            raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
+            self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
+            rhs_type = self.e()
+            if rhs_type == tokenizer.TOKEN_CHARACTER:
+                self.generate_op_code(OPCODE.POP_CHAR)
+                self.generate_address(symbol.dp)
+            elif lhs_type == rhs_type:
+                self.generate_op_code(OPCODE.POP)
+                self.generate_address(symbol.dp)
+            else:
+                raise PascalError('Type mismatch %s != %s' % (lhs_type, rhs_type))
 
     def e(self):
         t1 = self.t()
@@ -225,10 +280,16 @@ class Parser(object):
 
         if token_type == tokenizer.TOKEN_ID:
             symbol = self.find_name_or_error()
-            self.generate_op_code(OPCODE.PUSH)
-            self.generate_address(symbol.dp)
-            self.match(tokenizer.TOKEN_ID)
+            if symbol.type_of_object == symbol_tables.TYPE_VARIABLE:
+                self.generate_op_code(OPCODE.PUSH)
+                self.generate_address(symbol.dp)
+                self.match(tokenizer.TOKEN_ID)
+            elif symbol.type_of_object == symbol_tables.TYPE_ARRAY:
+                self.match(tokenizer.TOKEN_ID)
+                self.access_array(symbol)
+                self.generate_op_code(OPCODE.RETRIEVE)
             return symbol.data_type
+
         elif token_type == 'TK_NOT':
             self.generate_op_code(OPCODE.NOT)
             self.match('TK_NOT')
@@ -241,9 +302,15 @@ class Parser(object):
         elif token_type == tokenizer.TOKEN_DATA_TYPE_INT:
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_INT)
         elif token_type == tokenizer.TOKEN_DATA_TYPE_REAL:
-            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_REAL)
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(self.current_token.value_of)
+            self.match(tokenizer.TOKEN_DATA_TYPE_REAL)
+            return tokenizer.TOKEN_DATA_TYPE_REAL
         elif token_type == tokenizer.TOKEN_DATA_TYPE_BOOL:
-            return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_BOOL)
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(self.current_token.value_of)
+            self.match(tokenizer.TOKEN_DATA_TYPE_BOOL)
+            return tokenizer.TOKEN_DATA_TYPE_BOOL
         elif token_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
             return generate_pushi_and_address(tokenizer.TOKEN_DATA_TYPE_CHAR)
         elif token_type == tokenizer.TOKEN_CHARACTER:
@@ -251,6 +318,16 @@ class Parser(object):
             self.generate_address(ord(self.current_token.value_of))
             self.match(tokenizer.TOKEN_CHARACTER)
             return tokenizer.TOKEN_CHARACTER
+        elif token_type == 'TK_TRUE':
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(1)
+            self.match('TK_TRUE')
+            return tokenizer.TOKEN_DATA_TYPE_BOOL
+        elif token_type == 'TK_FALSE':
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(0)
+            self.match('TK_FALSE')
+            return tokenizer.TOKEN_DATA_TYPE_BOOL
         else:
             raise PascalError('f() does not support %s, %s' % (self.current_token.value_of, token_type))
 
@@ -430,19 +507,28 @@ class Parser(object):
                 elif t1 == tokenizer.TOKEN_DATA_TYPE_CHAR:
                     self.generate_op_code(OPCODE.PRINT_C)
                     self.generate_address(symbol.dp)
+                elif t1 == tokenizer.TOKEN_DATA_TYPE_REAL:
+                    self.generate_op_code(OPCODE.PRINT_R)
+                    self.generate_address(symbol.dp)
+                elif t1 == tokenizer.TOKEN_DATA_TYPE_BOOL:
+                    self.generate_op_code(OPCODE.PRINT_B)
+                    self.generate_address(symbol.dp)
+                elif t1 == tokenizer.TOKEN_DATA_TYPE_ARRAY:
+                    self.access_array(symbol)
+                    self.generate_op_code(OPCODE.RETRIEVE)
+
                 else:
-                    raise PascalError('writeln does not support ' + symbol)
-            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
+                    raise PascalError('writeln does not support ' + str(symbol))
+            if self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_INT:
                 self.generate_op_code(OPCODE.PRINT_ILIT)
                 self.generate_address(int(self.current_token.value_of))
                 self.match(tokenizer.TOKEN_DATA_TYPE_INT)
-            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
+            if self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
                 self.generate_op_code(OPCODE.PRINT_C)
                 self.generate_address(self.current_token.value_of)
                 self.match(tokenizer.TOKEN_CHARACTER)
-            else:
-                raise PascalError('writeln does not support %s', self.current_token.value_of)
-
+            # else:
+            #     raise PascalError('writeln does not support %s', self.current_token.value_of)
             type_of = self.current_token.type_of
             if type_of == tokenizer.TOKEN_OPERATOR_COMMA:
                 self.match(tokenizer.TOKEN_OPERATOR_COMMA)
@@ -613,3 +699,70 @@ class Parser(object):
             self.ip = hole
             self.generate_address(save)
         self.ip = save
+
+    def extract_ranges(self, token):
+        """
+
+        :param token: Token
+        :return:
+        """
+        payload = {}
+        split = token.value_of.split('..')
+        if len(split) != 2:
+            raise PascalError('Unexpected range for array, expected in form of 0..2, got ' + self.current_token)
+        left, right = split[0], split[1]
+        # figure out data type
+        if left.isalpha():
+            if right.isalpha():
+                payload['access_type'] = tokenizer.TOKEN_DATA_TYPE_CHAR
+            else:
+                raise PascalError('Array range mismatch, %s %s' % (left, right))
+        else:
+            # check for float/int
+            if left.__contains__('.'):
+                if right.__contains__('.'):
+                    payload['data_type'] = tokenizer.TOKEN_DATA_TYPE_REAL
+                else:
+                    raise PascalError('Array range mismatch, %s %s' % (left, right))
+            else:
+                # assume int
+                payload['access_type'] = tokenizer.TOKEN_DATA_TYPE_INT
+        payload['left'], payload['right'], payload['token'] = left, right, token
+        return payload
+
+    def access_array(self, symbol):
+        self.match(tokenizer.TOKEN_OPERATOR_LEFT_BRACKET)
+        curr_symbol = self.find_name_or_error()
+        self.generate_op_code(OPCODE.PUSH)
+        self.generate_address(curr_symbol.dp)
+        self.match(self.current_token.type_of)
+        self.match(tokenizer.TOKEN_OPERATOR_RIGHT_BRACKET)
+
+        self.generate_op_code(OPCODE.PUSHI)
+
+        if curr_symbol.data_type == tokenizer.TOKEN_DATA_TYPE_INT:
+            self.generate_address(int(symbol.left))
+            self.generate_op_code(OPCODE.SUB)
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(4)
+            self.generate_op_code(OPCODE.MULTIPLY)
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(symbol.dp)
+            self.generate_op_code(OPCODE.ADD)
+        elif curr_symbol.data_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
+            self.generate_address(symbol.left)
+            self.generate_op_code(OPCODE.SUB)
+            self.generate_op_code(OPCODE.PUSHI)
+            self.generate_address(symbol.dp)
+            self.generate_op_code(OPCODE.ADD)
+        else:
+            raise Parser('Array access with type %s not supported.' % curr_symbol.data_type)
+
+    def array_assignment(self, symbol):
+        self.access_array(symbol)
+        self.match(tokenizer.TOKEN_OPERATOR_ASSIGNMENT)
+        e1 = self.e()
+        if e1 == symbol.assignment_type:
+            self.generate_op_code(OPCODE.DUMP)
+        else:
+            raise PascalError('Array assignment type mismatch with ' + e1 + ' and ' + symbol.assignment_type)

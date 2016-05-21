@@ -115,6 +115,15 @@ class Emulator(object):
         elif op == OPCODE.DIVIDE:
             self.divide()
             self.start()
+        elif op == OPCODE.DUMP:
+            self.dump()
+            self.start()
+        elif op == OPCODE.RETRIEVE:
+            self.retrieve()
+            self.start()
+        elif op == OPCODE.PRINT_B:
+            self.print_b()
+            self.start()
         else:
             print 'Stack', self.stack
             raise PascalError('Emulator lacks support for opcode %i' % op)
@@ -131,13 +140,6 @@ class Emulator(object):
         return byte_unpacker(immediate)
 
     def immediate_data(self):
-        # self.data_pointer = self.immediate_value()
-        # print '-->', self.data_pointer
-        # data = bytearray()
-        # for i in range(4):
-        #     data.append(self.data_array[self.data_pointer])
-        #     self.data_pointer += 1
-        # return byte_unpacker(data)
         return self.data_array[self.immediate_value()]
 
     def pop(self):
@@ -260,3 +262,21 @@ class Emulator(object):
         self.ip += 1
         right = float(self.stack.pop())
         self.stack.append(float(self.stack.pop()) - right)
+
+    def dump(self):
+        self.ip += 1
+        assignment = self.stack.pop()
+        self.data_pointer = self.stack.pop()
+        self.data_array[self.data_pointer] = assignment
+        self.data_pointer += 1
+
+    def retrieve(self):
+        self.ip += 1
+        self.data_pointer = self.stack.pop()
+        self.stack.append(self.data_pointer)
+        self.std_out.append(self.data_array[self.data_pointer])
+
+    def print_b(self):
+        self.ip += 1
+        boolean = self.immediate_data()
+        self.std_out.append('true' if boolean == 1 else 'false')
