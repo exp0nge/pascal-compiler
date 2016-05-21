@@ -163,7 +163,8 @@ class Emulator(object):
 
     def push(self):
         self.ip += 1
-        self.stack.append(self.immediate_data())
+        imm = self.immediate_data()
+        self.stack.append(imm)
 
     def print_new_line(self):
         self.ip += 1
@@ -285,7 +286,6 @@ class Emulator(object):
         self.ip += 1
         self.data_pointer = self.stack.pop()
         self.stack.append(self.data_array[self.data_pointer])
-        # self.std_out.append(self.data_array[self.data_pointer])
 
     def print_b(self):
         self.ip += 1
@@ -299,5 +299,5 @@ class Emulator(object):
     def pop_real_lit(self):
         self.ip += 1
         popped_value = self.stack.pop()
-        self.data_array[self.immediate_value()] = '{0:.2f}'.format(bits_to_float(popped_value))
+        self.data_array[self.immediate_value()] = float('{0:.2f}'.format(bits_to_float(popped_value)))
         self.data_pointer += 1
