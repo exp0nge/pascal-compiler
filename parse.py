@@ -562,7 +562,7 @@ class Parser(object):
             elif self.current_token.type_of == tokenizer.TOKEN_STRING_LIT:
                 self.generate_op_code(OPCODE.PUSHI)
                 s = self.current_token.value_of
-                s = s.replace("'", '')
+                s = s[1:-1]  # chop first and last quotes
                 self.generate_address(len(s))
                 self.generate_op_code(OPCODE.PRINT_STR_LIT)
                 for byte in bytearray(s):
@@ -786,7 +786,7 @@ class Parser(object):
         self.generate_op_code(OPCODE.PUSHI)
 
         if curr_symbol.data_type == tokenizer.TOKEN_DATA_TYPE_INT:
-            self.generate_address(symbol.left) # gives me the array in reverse
+            self.generate_address(symbol.left)  # gives me the array in reverse
             self.generate_op_code(OPCODE.XCHG)
             self.generate_op_code(OPCODE.SUB)
             self.generate_op_code(OPCODE.PUSHI)
@@ -816,4 +816,3 @@ class Parser(object):
 
     def procedure_declaration(self):
         self.match('TK_PROCEDURE')
-
