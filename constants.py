@@ -56,6 +56,8 @@ class OPCODE(object):
     RETRIEVE = 35
     FDIVIDE = 36
     POP_REAL_LIT = 37
+    RET_AND_PRINT = 38
+    PRINT_STR_LIT = 39
 
 
 class TYPE(object):

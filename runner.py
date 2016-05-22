@@ -18,13 +18,13 @@ if __name__ == '__main__':
     # tokens = get_token(PascalFile(input_file_location='control_for.pas', output_location=''))
     # tokens = get_token(PascalFile(input_file_location='case_statement.pas', output_location=''))
     tokens = get_token(PascalFile(input_file_location='arrays.pas', output_location=''))
+    # tokens = get_token(PascalFile(input_file_location='procedures.pas', output_location=''))
 
-
-    pretty_printer.pprint(tokens) # This prints tokens, comment it out to not see them
+    pretty_printer.pprint(tokens)  # This prints tokens, comment it out to not see them
     print '----------------------------------'
     parser = Parser(token_list=tokens)
     byte_array = parser.parse()
-    pretty_printer.pprint(byte_array) # This prints the byte array
+    pretty_printer.pprint(byte_array)  # This prints the byte array
     print '----------------------------------'
     emulator = Emulator(byte_array)
     emulator.start()

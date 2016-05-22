@@ -12,7 +12,7 @@ class Parser(object):
         self.ip = 0
         self.dp = 0
         self.symbol_table = []
-        self.byte_array = bytearray(500)
+        self.byte_array = bytearray(5000)
 
     def find_name_in_symbol_table(self, name):
         """
@@ -78,6 +78,8 @@ class Parser(object):
         # either we see var or begin or a comment
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
+        elif self.current_token.type_of == 'TK_PROCEDURE':
+            self.procedure_declaration()
         else:
             self.begin()
         return self.byte_array
@@ -526,13 +528,16 @@ class Parser(object):
         while True:
             if self.current_token.type_of == tokenizer.TOKEN_ID:
                 symbol = self.find_name_or_error()
-                expression = self.e()
+                if hasattr(symbol, 'assignment_type'):
+                    self.match(tokenizer.TOKEN_ID)
+                    self.access_array(symbol)
+                    self.generate_op_code(OPCODE.RET_AND_PRINT)
+                    continue
+                else:
+                    expression = self.e()
                 if expression == tokenizer.TOKEN_DATA_TYPE_INT:
-                    if hasattr(symbol, 'assignment_type'):
-                        self.generate_op_code(OPCODE.RETRIEVE)
-                    else:
-                        self.generate_op_code(OPCODE.PRINT_I)
-                        self.generate_address(symbol.dp)
+                    self.generate_op_code(OPCODE.PRINT_I)
+                    self.generate_address(symbol.dp)
                 elif expression == tokenizer.TOKEN_DATA_TYPE_CHAR:
                     self.generate_op_code(OPCODE.PRINT_C)
                     self.generate_address(symbol.dp)
@@ -550,10 +555,21 @@ class Parser(object):
                 self.generate_op_code(OPCODE.PRINT_ILIT)
                 self.generate_address(int(self.current_token.value_of))
                 self.match(tokenizer.TOKEN_DATA_TYPE_INT)
-            if self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
+            elif self.current_token.type_of == tokenizer.TOKEN_DATA_TYPE_CHAR:
                 self.generate_op_code(OPCODE.PRINT_C)
                 self.generate_address(self.current_token.value_of)
                 self.match(tokenizer.TOKEN_CHARACTER)
+            elif self.current_token.type_of == tokenizer.TOKEN_STRING_LIT:
+                self.generate_op_code(OPCODE.PUSHI)
+                s = self.current_token.value_of
+                s = s.replace("'", '')
+                self.generate_address(len(s))
+                self.generate_op_code(OPCODE.PRINT_STR_LIT)
+                for byte in bytearray(s):
+                    self.byte_array[self.ip] = byte
+                    self.ip += 1
+                self.match(tokenizer.TOKEN_STRING_LIT)
+
             # else:
             #     raise PascalError('writeln does not support %s', self.current_token.value_of)
             type_of = self.current_token.type_of
@@ -764,13 +780,14 @@ class Parser(object):
         curr_symbol = self.find_name_or_error()
         self.generate_op_code(OPCODE.PUSH)
         self.generate_address(curr_symbol.dp)
-        self.match(self.current_token.type_of)
+        self.match(tokenizer.TOKEN_ID)
         self.match(tokenizer.TOKEN_OPERATOR_RIGHT_BRACKET)
 
         self.generate_op_code(OPCODE.PUSHI)
 
         if curr_symbol.data_type == tokenizer.TOKEN_DATA_TYPE_INT:
-            self.generate_address(int(symbol.left))
+            self.generate_address(symbol.left) # gives me the array in reverse
+            self.generate_op_code(OPCODE.XCHG)
             self.generate_op_code(OPCODE.SUB)
             self.generate_op_code(OPCODE.PUSHI)
             self.generate_address(4)
@@ -780,6 +797,7 @@ class Parser(object):
             self.generate_op_code(OPCODE.ADD)
         elif curr_symbol.data_type == tokenizer.TOKEN_DATA_TYPE_CHAR:
             self.generate_address(symbol.left)
+            self.generate_op_code(OPCODE.XCHG)
             self.generate_op_code(OPCODE.SUB)
             self.generate_op_code(OPCODE.PUSHI)
             self.generate_address(symbol.dp)
@@ -795,3 +813,7 @@ class Parser(object):
             self.generate_op_code(OPCODE.DUMP)
         else:
             raise PascalError('Array assignment type mismatch with ' + e1 + ' and ' + symbol.assignment_type)
+
+    def procedure_declaration(self):
+        self.match('TK_PROCEDURE')
+

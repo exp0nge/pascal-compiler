@@ -131,6 +131,12 @@ class Emulator(object):
         elif op == OPCODE.POP_REAL_LIT:
             self.pop_real_lit()
             self.start()
+        elif op == OPCODE.RET_AND_PRINT:
+            self.ret_and_print()
+            self.start()
+        elif op == OPCODE.PRINT_STR_LIT:
+            self.print_str_lit()
+            self.start()
         else:
             print 'Stack', self.stack
             raise PascalError('Emulator lacks support for opcode %i' % op)
@@ -301,3 +307,17 @@ class Emulator(object):
         popped_value = self.stack.pop()
         self.data_array[self.immediate_value()] = float('{0:.2f}'.format(bits_to_float(popped_value)))
         self.data_pointer += 1
+
+    def ret_and_print(self):
+        self.ip += 1
+        self.data_pointer = self.stack.pop()
+        self.std_out.append(self.data_array[self.data_pointer])
+
+    def print_str_lit(self):
+        self.ip += 1
+        string_len = self.stack.pop()
+        string = ''
+        for i in range(string_len):
+            string += chr(self.byte_array[self.ip])
+            self.ip += 1
+        self.std_out.append(string)
