@@ -13,13 +13,13 @@ begin
         begin
               a[i] := i;
               avg := avg + a[i];
-              //writeln(a[i]);
+              writeln('running total:');
               writeln(avg);
         end;
 
     avg := avg / 11.0;
     writeln(avg);
-    writeln('The next prints will reverse the array.');
+    writeln('');
     for i := 0 to 5 do
         begin
             temp := a[i];
@@ -28,6 +28,7 @@ begin
             x := x - 1;
         end;
 
+   writeln('The next prints show the array after reversing.');
    for i := 0 to 10 do
         begin
             writeln(a[i]);

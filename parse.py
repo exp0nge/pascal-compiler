@@ -79,7 +79,9 @@ class Parser(object):
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
         elif self.current_token.type_of == 'TK_PROCEDURE':
-            self.procedure_declaration()
+            while self.current_token.type_of == 'TK_PROCEDURE':
+                self.procedure_declaration()
+            self.begin()
         else:
             self.begin()
         return self.byte_array
@@ -176,8 +178,10 @@ class Parser(object):
         # check for more var
         if self.current_token.type_of == 'TK_VAR':
             self.variable_declaration()
+        elif self.current_token.type_of == 'TK_PROCEDURE':
+            self.procedure_declaration()
         else:
-            # no more declarations
+            # no more declarations; begins main procedure
             self.begin()
 
     def begin(self):
@@ -816,3 +820,36 @@ class Parser(object):
 
     def procedure_declaration(self):
         self.match('TK_PROCEDURE')
+        procedure = self.current_token
+        self.match(tokenizer.TOKEN_ID)
+        self.match(tokenizer.TOKEN_SEMICOLON)
+
+        self.generate_op_code(OPCODE.JMP)
+        hole = self.ip
+        self.generate_address(0)
+
+        symbol = symbol_tables.SymbolObject(name=procedure.value_of,
+                                            type_of_object='TK_PROCEDURE',
+                                            data_type=symbol_tables.TYPE_PROCEDURE,
+                                            dp=self.dp,
+                                            attribute={
+                                                'ip': self.ip,
+                                                'ret': -1
+                                            })
+
+        self.match('TK_BEGIN')
+        self.statements()
+        self.match('TK_END')
+        self.match(tokenizer.TOKEN_SEMICOLON)
+
+        self.generate_op_code(OPCODE.JMP)
+        symbol.ret = self.ip
+        self.generate_address(0)
+
+        self.symbol_table.append(symbol)
+        self.dp += 1
+
+        save = self.ip
+        self.ip = hole
+        self.generate_address(save)
+        self.ip = save

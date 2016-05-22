@@ -1,14 +1,14 @@
 program procedures;
 
-var x : integer;
+var x,y : integer;
 
 procedure minusOne;
     begin
-    x := x - 1;
+        y := 1;
     end;
 
 begin
     x := 99;
     minusOne;
     writeln(x);
-end;
+end.
