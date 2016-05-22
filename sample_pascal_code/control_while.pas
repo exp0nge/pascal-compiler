@@ -2,11 +2,11 @@ program controlWhile;
     var x, y : integer;
 begin
     x := 0;
-    writeln(x);
+    writeln('initial value of x:', x);
     while x < 10 do
         begin
-            writeln(x);
             x := x + 3;
+            writeln('value of x are x + 3 =', x);
         end;
-    writeln(x);
+    writeln('final value of x:', x);
 end.

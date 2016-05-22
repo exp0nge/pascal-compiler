@@ -1,14 +1,12 @@
 program controlIf;
-    var x, y, z : integer;
+    var x, y : integer;
 begin
-    x := 10;
+    x := 21;
     y := 20;
-    z := 99;
     if x > y then
-        writeln(x)
-        // the code below can be uncommented
-//    else if x = 10 then
-//        writeln(1)
+        writeln('x > y;', 'x is', x, 'y is', y)
+    else if x < y then
+        writeln('x < y;', 'x is', x, 'y is', y)
     else
-        writeln(z);
+        writeln('x = y;', 'x is', x, 'y is', y);
 end.

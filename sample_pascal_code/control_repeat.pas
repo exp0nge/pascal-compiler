@@ -3,11 +3,12 @@ program controlRepeat;
 begin
     x := 0;
     y := 50;
-    writeln(x);
+    writeln('value of x before repeat-statement:', x);
+    writeln('value of y before repeat-statement:', y);
     repeat
         x := x + 1;
         y := y + 100;
     until x >= 10;
-    writeln(x);
-    writeln(y);
+    writeln('value of x after repeat-statement:', x);
+    writeln('value of y after repeat-statement:', y);
 end.

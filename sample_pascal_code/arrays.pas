@@ -13,12 +13,11 @@ begin
         begin
               a[i] := i;
               avg := avg + a[i];
-              writeln('running total:');
-              writeln(avg);
+              writeln('running total:', avg);
         end;
 
     avg := avg / 11.0;
-    writeln(avg);
+    writeln('averge:',avg);
     writeln('');
     for i := 0 to 5 do
         begin

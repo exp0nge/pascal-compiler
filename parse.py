@@ -6,13 +6,14 @@ from constants import OPCODE, CONDITIONALS, byte_packer, byte_unpacker
 
 
 class Parser(object):
-    def __init__(self, token_list):
+    def __init__(self, token_list, verbose=False):
         self.token_list = iter(token_list)
         self.current_token = None
         self.ip = 0
         self.dp = 0
         self.symbol_table = []
         self.byte_array = bytearray(5000)
+        self.verbose = verbose
 
     def find_name_in_symbol_table(self, name):
         """
@@ -36,7 +37,8 @@ class Parser(object):
         #     except StopIteration:
         #         return
         if self.current_token.type_of == token_type:
-            print 'matched: ', token_type, self.current_token.value_of
+            if self.verbose:
+                print 'matched: ', token_type, self.current_token.value_of
             try:
                 self.current_token = self.token_list.next()
             except StopIteration:
@@ -225,7 +227,8 @@ class Parser(object):
             elif type_of == tokenizer.TOKEN_COMMENT:
                 self.match(tokenizer.TOKEN_COMMENT)
             else:
-                print 'Parser: statements() can\'t match ', self.current_token
+                if self.verbose:
+                    print 'Parser: statements() can\'t match ', self.current_token
                 return
 
     def find_name_or_error(self):

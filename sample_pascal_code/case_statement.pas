@@ -6,10 +6,10 @@ begin
     grade := 'A';
 
     case (grade) of
-    'A': writeln(100);
-    'B': writeln(85);
-    'C': writeln(75);
-    'D': writeln(60);
-    'F': writeln(0);
+    'A': writeln('your grade is', 100);
+    'B': writeln('your grade is', 85);
+    'C': writeln('your grade is', 75);
+    'D': writeln('your grade is', 60);
+    'F': writeln('your grade is', 0);
     end;
 end.

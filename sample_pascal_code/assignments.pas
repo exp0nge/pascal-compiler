@@ -12,10 +12,10 @@ begin
     aChar := 'a';
     aReal := 1.64;
     writeln(x, x);
-    writeln(y);
+    writeln('(5 + 5) * 2 =', y);
     hello := 5 + 2 * 10 / 2 * 2 + 1 - 6;
-    writeln(hello);
-    writeln(aChar);
-    writeln(aBool);
-    writeln(aReal);
+    writeln('5 + 2 * 10 / 2 * 2 + 1 - 6 =', hello);
+    writeln('this is a char:', aChar);
+    writeln('this is a bool:', aBool);
+    writeln('this is a real:', aReal);
 end.
