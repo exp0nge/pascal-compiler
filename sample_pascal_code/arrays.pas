@@ -17,7 +17,7 @@ begin
         end;
 
     avg := avg / 11.0;
-    writeln('averge:',avg);
+    writeln('average:',avg);
     writeln('');
     for i := 0 to 5 do
         begin
