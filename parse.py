@@ -274,7 +274,8 @@ class Parser(object):
     def t(self):
         t1 = self.f()
         while (self.current_token.type_of == tokenizer.TOKEN_OPERATOR_MULTIPLICATION or
-                       self.current_token.type_of == tokenizer.TOKEN_OPERATOR_DIVISION):
+                       self.current_token.type_of == tokenizer.TOKEN_OPERATOR_DIVISION or
+                       self.current_token.type_of == 'TK_DIV'):
             op = self.current_token.type_of
             self.match(op)
             t2 = self.f()

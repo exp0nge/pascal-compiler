@@ -1,5 +1,5 @@
 program assignments;
-var x, y : integer;
+var x, y, intDiv : integer;
 var hello : integer;
 var aChar : char;
 var aBool : boolean;
@@ -11,6 +11,7 @@ begin
     aBool := true;
     aChar := 'a';
     aReal := 1.64;
+    intDiv := 5 div 2;
     writeln(x, x);
     writeln('(5 + 5) * 2 =', y);
     hello := 5 + 2 * 10 / 2 * 2 + 1 - 6;
@@ -18,4 +19,5 @@ begin
     writeln('this is a char:', aChar);
     writeln('this is a bool:', aBool);
     writeln('this is a real:', aReal);
+    writeln('integer division of', 5, 'div', 2, 'is', intDiv);
 end.

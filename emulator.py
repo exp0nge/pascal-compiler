@@ -116,6 +116,9 @@ class Emulator(object):
         elif op == OPCODE.FDIVIDE:
             self.f_divide()
             self.start()
+        elif op == OPCODE.DIV:
+            self.div()
+            self.start()
         elif op == OPCODE.DUMP:
             self.dump()
             self.start()
@@ -321,3 +324,8 @@ class Emulator(object):
             string += chr(self.byte_array[self.ip])
             self.ip += 1
         self.std_out.append(string)
+
+    def div(self):
+        self.ip += 1
+        denom = int(self.stack.pop())
+        self.stack.append(int(self.stack.pop()) / denom)

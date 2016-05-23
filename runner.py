@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # UNCOMMENT the below statements one at a time
 
     # tokens = get_token(PascalFile(input_file_location='simple_assignment.pas', output_location=''))
-    # tokens = get_token(PascalFile(input_file_location='assignments.pas', output_location=''))
+    # tokens = get_token(PascalFile(input_file_location='complex_assignments.pas', output_location=''))
     # tokens = get_token(PascalFile(input_file_location='control_repeat.pas', output_location=''))
     # tokens = get_token(PascalFile(input_file_location='control_while.pas', output_location=''))
     # tokens = get_token(PascalFile(input_file_location='control_if.pas', output_location=''))
