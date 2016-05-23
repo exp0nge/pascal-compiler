@@ -10,6 +10,8 @@ To run an example, uncomment ONE of the lines that look like this:
 
 `tokens = get_token(PascalFile(input_file_location='arrays.pas', output_location=''))`
 
+Then on the command line, run `python runner.py`
+
 This will effectively run the scanner and allow the script to grab those tokens and supply it to the Parser which
 will then be supplied to the Emulator. That example is the arrays example which gets that total AND reverses
 the array. Since I support string literals, the console output has a nice display to show that.
